@@ -1,0 +1,115 @@
+<%- include('partials/header') %>
+
+<section class="page-header">
+  <div class="container">
+    <h1><i class="fas fa-th-large"></i> All Products</h1>
+    <p><%= totalProducts %> products found</p>
+  </div>
+</section>
+
+<section class="products-page">
+  <div class="container">
+    <div class="products-layout">
+      <aside class="filter-sidebar">
+        <h3><i class="fas fa-filter"></i> Filters</h3>
+
+        <form class="filter-form" action="/products" method="GET">
+          <input type="hidden" name="search" value="<%= currentSearch %>">
+
+          <div class="filter-group">
+            <h4>Category</h4>
+            <a href="/products?search=<%= currentSearch %>&sort=<%= currentSort %>" class="filter-link <%= !currentCategory ? 'active' : '' %>">All Categories</a>
+            <% categories.forEach(cat => { %>
+              <a href="/products?category=<%= cat.slug %>&search=<%= currentSearch %>&sort=<%= currentSort %>" class="filter-link <%= currentCategory === cat.slug ? 'active' : '' %>">
+                <%= cat.icon %> <%= cat.name %>
+              </a>
+            <% }) %>
+          </div>
+
+          <div class="filter-group">
+            <h4>Sort By</h4>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>" class="filter-link <%= !currentSort ? 'active' : '' %>">Newest</a>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=popular" class="filter-link <%= currentSort === 'popular' ? 'active' : '' %>">Most Popular</a>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=price_asc" class="filter-link <%= currentSort === 'price_asc' ? 'active' : '' %>">Price: Low to High</a>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=price_desc" class="filter-link <%= currentSort === 'price_desc' ? 'active' : '' %>">Price: High to Low</a>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=rating" class="filter-link <%= currentSort === 'rating' ? 'active' : '' %>">Top Rated</a>
+          </div>
+        </form>
+      </aside>
+
+      <div class="products-main">
+        <% if (currentCategory || currentSearch) { %>
+          <div class="active-filters">
+            <% if (currentCategory) { %>
+              <span class="filter-tag">
+                Category: <%= categories.find(c => c.slug === currentCategory)?.name || currentCategory %>
+                <a href="/products?search=<%= currentSearch %>&sort=<%= currentSort %>"><i class="fas fa-times"></i></a>
+              </span>
+            <% } %>
+            <% if (currentSearch) { %>
+              <span class="filter-tag">
+                Search: "<%= currentSearch %>"
+                <a href="/products?category=<%= currentCategory %>&sort=<%= currentSort %>"><i class="fas fa-times"></i></a>
+              </span>
+            <% } %>
+          </div>
+        <% } %>
+
+        <% if (products.length === 0) { %>
+          <div class="empty-state">
+            <i class="fas fa-search fa-3x"></i>
+            <h3>No products found</h3>
+            <p>Try adjusting your search or filters</p>
+            <a href="/products" class="btn btn-primary">Clear Filters</a>
+          </div>
+        <% } else { %>
+          <div class="products-grid">
+            <% products.forEach(product => { %>
+              <div class="product-card">
+                <a href="/product/<%= product.slug %>" class="product-image-wrap">
+                  <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy">
+                  <% if (product.original_price && product.original_price > product.price) { %>
+                    <span class="discount-badge">-<%= Math.round((1 - product.price / product.original_price) * 100) %>%</span>
+                  <% } %>
+                </a>
+                <div class="product-info">
+                  <span class="product-category"><%= product.category_name %></span>
+                  <a href="/product/<%= product.slug %>" class="product-name"><%= product.name %></a>
+                  <div class="product-rating">
+                    <% for (let i = 0; i < 5; i++) { %>
+                      <i class="fas fa-star<%= i < Math.round(product.rating) ? '' : '-empty' %>"></i>
+                    <% } %>
+                    <span>(<%= product.reviews_count %>)</span>
+                  </div>
+                  <div class="product-price">
+                    <span class="current-price">$<%= parseFloat(product.price).toFixed(2) %></span>
+                    <% if (product.original_price) { %>
+                      <span class="original-price">$<%= parseFloat(product.original_price).toFixed(2) %></span>
+                    <% } %>
+                  </div>
+                  <span class="product-sold"><%= product.sold %> sold</span>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+
+          <% if (totalPages > 1) { %>
+            <div class="pagination">
+              <% if (currentPage > 1) { %>
+                <a href="?page=<%= currentPage - 1 %>&category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>" class="page-link"><i class="fas fa-chevron-left"></i></a>
+              <% } %>
+              <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="?page=<%= i %>&category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>" class="page-link <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+              <% } %>
+              <% if (currentPage < totalPages) { %>
+                <a href="?page=<%= currentPage + 1 %>&category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>" class="page-link"><i class="fas fa-chevron-right"></i></a>
+              <% } %>
+            </div>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

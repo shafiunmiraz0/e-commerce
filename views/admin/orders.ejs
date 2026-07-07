@@ -1,0 +1,95 @@
+<%- include('../partials/header') %>
+
+<section class="admin-page">
+  <div class="container">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="admin-user">
+          <i class="fas fa-user-shield fa-2x"></i>
+          <h3>Admin Panel</h3>
+          <span><%= user.username %></span>
+        </div>
+        <nav class="admin-nav">
+          <a href="/admin" class="admin-nav-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+          <a href="/admin/orders" class="admin-nav-link active"><i class="fas fa-shopping-bag"></i> Orders</a>
+          <a href="/admin/products" class="admin-nav-link"><i class="fas fa-box"></i> Products</a>
+          <a href="/admin/users" class="admin-nav-link"><i class="fas fa-users"></i> Users</a>
+          <hr>
+          <a href="/" class="admin-nav-link"><i class="fas fa-store"></i> View Store</a>
+          <a href="/logout" class="admin-nav-link text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <h2><i class="fas fa-shopping-bag"></i> Orders</h2>
+
+        <div class="filter-tabs">
+          <a href="/admin/orders" class="filter-tab <%= !currentStatus ? 'active' : '' %>">All (<%= counts.all %>)</a>
+          <a href="/admin/orders?status=pending" class="filter-tab <%= currentStatus === 'pending' ? 'active' : '' %>">Pending (<%= counts.pending %>)</a>
+          <a href="/admin/orders?status=confirmed" class="filter-tab <%= currentStatus === 'confirmed' ? 'active' : '' %>">Confirmed (<%= counts.confirmed %>)</a>
+          <a href="/admin/orders?status=shipped" class="filter-tab <%= currentStatus === 'shipped' ? 'active' : '' %>">Shipped (<%= counts.shipped %>)</a>
+          <a href="/admin/orders?status=delivered" class="filter-tab <%= currentStatus === 'delivered' ? 'active' : '' %>">Delivered (<%= counts.delivered %>)</a>
+          <a href="/admin/orders?status=cancelled" class="filter-tab <%= currentStatus === 'cancelled' ? 'active' : '' %>">Cancelled (<%= counts.cancelled %>)</a>
+        </div>
+
+        <% if (orders.length === 0) { %>
+          <div class="empty-state">
+            <i class="fas fa-inbox fa-3x"></i>
+            <h3>No orders found</h3>
+          </div>
+        <% } else { %>
+          <div class="orders-list">
+            <% orders.forEach(order => { %>
+              <div class="admin-order-card">
+                <div class="order-header">
+                  <div class="order-meta">
+                    <span class="order-id">#<%= order.id %></span>
+                    <span class="order-customer"><i class="fas fa-user"></i> <%= order.username || 'Guest' %></span>
+                    <span class="order-email"><%= order.email || '' %></span>
+                    <span class="order-date"><%= new Date(order.created_at).toLocaleString() %></span>
+                  </div>
+                  <div class="order-header-right">
+                    <span class="order-status status-<%= order.status %>"><%= order.status %></span>
+                    <span class="order-total-amount">$<%= parseFloat(order.total_amount).toFixed(2) %></span>
+                  </div>
+                </div>
+
+                <div class="order-items">
+                  <% order.items.forEach(item => { %>
+                    <div class="order-item">
+                      <img src="<%= item.product_image %>" alt="">
+                      <div class="order-item-info">
+                        <span><%= item.product_name %></span>
+                        <span><%= item.quantity %> x $<%= parseFloat(item.price).toFixed(2) %></span>
+                      </div>
+                    </div>
+                  <% }) %>
+                </div>
+
+                <div class="order-shipping">
+                  <strong>Ship to:</strong> <%= order.shipping_name %>, <%= order.shipping_address %>, <%= order.shipping_city %>, <%= order.shipping_country %> | Phone: <%= order.shipping_phone %>
+                  <% if (order.notes) { %> | Notes: <%= order.notes %><% } %>
+                </div>
+
+                <div class="order-footer">
+                  <span>Payment: <strong><%= order.payment_method.toUpperCase() %></strong></span>
+                  <form action="/admin/orders/<%= order.id %>/status" method="POST" class="status-form">
+                    <select name="status" onchange="this.form.submit()">
+                      <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                      <option value="confirmed" <%= order.status === 'confirmed' ? 'selected' : '' %>>Confirmed</option>
+                      <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                      <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                      <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                    </select>
+                  </form>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </main>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,120 @@
+<%- include('../partials/header') %>
+
+<section class="admin-page">
+  <div class="container">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="admin-user">
+          <i class="fas fa-user-shield fa-2x"></i>
+          <h3>Admin Panel</h3>
+          <span><%= user.username %></span>
+        </div>
+        <nav class="admin-nav">
+          <a href="/admin" class="admin-nav-link active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+          <a href="/admin/orders" class="admin-nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
+          <a href="/admin/products" class="admin-nav-link"><i class="fas fa-box"></i> Products</a>
+          <a href="/admin/users" class="admin-nav-link"><i class="fas fa-users"></i> Users</a>
+          <hr>
+          <a href="/" class="admin-nav-link"><i class="fas fa-store"></i> View Store</a>
+          <a href="/logout" class="admin-nav-link text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+
+        <div class="stats-grid">
+          <div class="stat-card stat-revenue">
+            <div class="stat-card-icon"><i class="fas fa-dollar-sign"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-card-label">Total Revenue</span>
+              <span class="stat-card-value">$<%= parseFloat(stats.totalRevenue).toFixed(2) %></span>
+            </div>
+          </div>
+          <div class="stat-card stat-orders">
+            <div class="stat-card-icon"><i class="fas fa-shopping-bag"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-card-label">Total Orders</span>
+              <span class="stat-card-value"><%= stats.totalOrders %></span>
+            </div>
+          </div>
+          <div class="stat-card stat-products">
+            <div class="stat-card-icon"><i class="fas fa-box"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-card-label">Products</span>
+              <span class="stat-card-value"><%= stats.totalProducts %></span>
+            </div>
+          </div>
+          <div class="stat-card stat-users">
+            <div class="stat-card-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-card-label">Customers</span>
+              <span class="stat-card-value"><%= stats.totalUsers %></span>
+            </div>
+          </div>
+          <div class="stat-card stat-pending">
+            <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-card-label">Pending Orders</span>
+              <span class="stat-card-value"><%= stats.pendingOrders %></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-grid">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3><i class="fas fa-clock"></i> Recent Orders</h3>
+              <a href="/admin/orders" class="btn btn-sm btn-outline">View All</a>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% recentOrders.forEach(order => { %>
+                    <tr>
+                      <td><strong>#<%= order.id %></strong></td>
+                      <td><%= order.username || 'Guest' %></td>
+                      <td><strong>$<%= parseFloat(order.total_amount).toFixed(2) %></strong></td>
+                      <td><span class="status-badge status-<%= order.status %>"><%= order.status %></span></td>
+                      <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3><i class="fas fa-trophy"></i> Top Products</h3>
+            </div>
+            <div class="top-products">
+              <% topProducts.forEach((p, i) => { %>
+                <div class="top-product-item">
+                  <span class="top-rank">#<%= i + 1 %></span>
+                  <img src="<%= p.image %>" alt="<%= p.name %>">
+                  <div class="top-product-info">
+                    <span class="top-product-name"><%= p.name %></span>
+                    <span class="top-product-sold"><%= p.sold %> sold</span>
+                  </div>
+                  <span class="top-product-price">$<%= parseFloat(p.price).toFixed(2) %></span>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,122 @@
+<%- include('partials/header') %>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <h1>Shop the <span class="text-gradient">Best Deals</span> Online</h1>
+      <p>Discover thousands of products at unbeatable prices. Free shipping on orders over $50.</p>
+      <div class="hero-actions">
+        <a href="/products" class="btn btn-primary btn-lg"><i class="fas fa-shopping-bag"></i> Shop Now</a>
+        <a href="/register" class="btn btn-outline-light btn-lg"><i class="fas fa-user-plus"></i> Join Free</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-number">10K+</span><span class="stat-label">Products</span></div>
+        <div class="stat"><span class="stat-number">50K+</span><span class="stat-label">Customers</span></div>
+        <div class="stat"><span class="stat-number">99%</span><span class="stat-label">Satisfaction</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="categories-section">
+  <div class="container">
+    <h2 class="section-title"><i class="fas fa-th-large"></i> Shop by Category</h2>
+    <div class="categories-grid">
+      <% categories.forEach(cat => { %>
+        <a href="/products?category=<%= cat.slug %>" class="category-card">
+          <span class="category-icon"><%= cat.icon %></span>
+          <span class="category-name"><%= cat.name %></span>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<section class="products-section">
+  <div class="container">
+    <h2 class="section-title"><i class="fas fa-fire"></i> Featured Products</h2>
+    <div class="products-grid">
+      <% featured.forEach(product => { %>
+        <div class="product-card">
+          <a href="/product/<%= product.slug %>" class="product-image-wrap">
+            <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy">
+            <% if (product.original_price && product.original_price > product.price) { %>
+              <span class="discount-badge">
+                -<%= Math.round((1 - product.price / product.original_price) * 100) %>%
+              </span>
+            <% } %>
+          </a>
+          <div class="product-info">
+            <span class="product-category"><%= product.category_name %></span>
+            <a href="/product/<%= product.slug %>" class="product-name"><%= product.name %></a>
+            <div class="product-rating">
+              <% for (let i = 0; i < 5; i++) { %>
+                <i class="fas fa-star<%= i < Math.round(product.rating) ? '' : '-empty' %>"></i>
+              <% } %>
+              <span>(<%= product.reviews_count %>)</span>
+            </div>
+            <div class="product-price">
+              <span class="current-price">$<%= parseFloat(product.price).toFixed(2) %></span>
+              <% if (product.original_price) { %>
+                <span class="original-price">$<%= parseFloat(product.original_price).toFixed(2) %></span>
+              <% } %>
+            </div>
+            <span class="product-sold"><%= product.sold %> sold</span>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+    <div class="section-footer">
+      <a href="/products" class="btn btn-primary">View All Products <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+
+<section class="products-section section-dark">
+  <div class="container">
+    <h2 class="section-title"><i class="fas fa-star"></i> Most Popular</h2>
+    <div class="products-grid">
+      <% popular.forEach(product => { %>
+        <div class="product-card">
+          <a href="/product/<%= product.slug %>" class="product-image-wrap">
+            <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy">
+            <% if (product.original_price && product.original_price > product.price) { %>
+              <span class="discount-badge">
+                -<%= Math.round((1 - product.price / product.original_price) * 100) %>%
+              </span>
+            <% } %>
+          </a>
+          <div class="product-info">
+            <span class="product-category"><%= product.category_name %></span>
+            <a href="/product/<%= product.slug %>" class="product-name"><%= product.name %></a>
+            <div class="product-rating">
+              <% for (let i = 0; i < 5; i++) { %>
+                <i class="fas fa-star<%= i < Math.round(product.rating) ? '' : '-empty' %>"></i>
+              <% } %>
+              <span>(<%= product.reviews_count %>)</span>
+            </div>
+            <div class="product-price">
+              <span class="current-price">$<%= parseFloat(product.price).toFixed(2) %></span>
+              <% if (product.original_price) { %>
+                <span class="original-price">$<%= parseFloat(product.original_price).toFixed(2) %></span>
+              <% } %>
+            </div>
+            <span class="product-sold"><%= product.sold %> sold</span>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-content">
+      <h2>Start Shopping Today</h2>
+      <p>Join over 50,000 happy customers and discover amazing deals every day.</p>
+      <a href="/products" class="btn btn-primary btn-lg"><i class="fas fa-rocket"></i> Explore Deals</a>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

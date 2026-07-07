@@ -1,0 +1,52 @@
+<%- include('partials/header') %>
+
+<section class="profile-page">
+  <div class="container">
+    <h1><i class="fas fa-id-card"></i> My Profile</h1>
+
+    <div class="profile-layout">
+      <div class="profile-info">
+        <div class="profile-card">
+          <div class="profile-avatar">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <h3><%= profile.full_name || profile.username %></h3>
+          <span class="profile-role"><%= profile.role %></span>
+          <p class="profile-email"><%= profile.email %></p>
+          <p class="profile-joined">Member since <%= new Date(profile.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) %></p>
+        </div>
+      </div>
+
+      <div class="profile-form-wrap">
+        <h3>Update Profile</h3>
+        <form action="/profile" method="POST" class="profile-form">
+          <div class="form-group">
+            <label><i class="fas fa-id-card"></i> Full Name</label>
+            <input type="text" name="full_name" value="<%= profile.full_name || '' %>" placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-phone"></i> Phone</label>
+            <input type="text" name="phone" value="<%= profile.phone || '' %>" placeholder="Phone number">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-map-marker-alt"></i> Address</label>
+            <textarea name="address" placeholder="Your address"><%= profile.address || '' %></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fas fa-city"></i> City</label>
+              <input type="text" name="city" value="<%= profile.city || '' %>" placeholder="City">
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-globe"></i> Country</label>
+              <input type="text" name="country" value="<%= profile.country || '' %>" placeholder="Country">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

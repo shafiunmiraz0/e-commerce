@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="/" class="logo">
+        <span class="logo-icon"><i class="fas fa-bolt"></i></span>
+        <span class="logo-text">Shop<span class="logo-highlight">Vue</span></span>
+      </a>
+
+      <form class="search-bar" action="/products" method="GET">
+        <input type="text" name="search" placeholder="Search for products..." value="<%= typeof currentSearch !== 'undefined' ? currentSearch : '' %>">
+        <button type="submit"><i class="fas fa-search"></i></button>
+      </form>
+
+      <div class="nav-links">
+        <a href="/products"><i class="fas fa-th-large"></i> Products</a>
+        <% if (user) { %>
+          <a href="/cart" class="cart-link">
+            <i class="fas fa-shopping-cart"></i> Cart
+          </a>
+          <a href="/my-orders"><i class="fas fa-box"></i> Orders</a>
+          <div class="dropdown">
+            <button class="dropdown-btn">
+              <i class="fas fa-user-circle"></i> <%= user.full_name || user.username %>
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="dropdown-menu">
+              <a href="/profile"><i class="fas fa-id-card"></i> My Profile</a>
+              <a href="/my-orders"><i class="fas fa-box"></i> My Orders</a>
+              <% if (user.role === 'admin') { %>
+                <a href="/admin"><i class="fas fa-cog"></i> Admin Panel</a>
+              <% } %>
+              <hr>
+              <a href="/logout" class="text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+          </div>
+        <% } else { %>
+          <a href="/login" class="btn btn-sm btn-primary">Login</a>
+          <a href="/register" class="btn btn-sm btn-outline">Sign Up</a>
+        <% } %>
+      </div>
+
+      <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('show')">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <% if (success && success.length > 0) { %>
+        <div class="alert alert-success">
+          <i class="fas fa-check-circle"></i> <%= success %>
+          <button onclick="this.parentElement.remove()" class="alert-close">&times;</button>
+        </div>
+      <% } %>
+      <% if (error && error.length > 0) { %>
+        <div class="alert alert-error">
+          <i class="fas fa-exclamation-circle"></i> <%= error %>
+          <button onclick="this.parentElement.remove()" class="alert-close">&times;</button>
+        </div>
+      <% } %>
+    </div>

@@ -1,0 +1,71 @@
+<%- include('partials/header') %>
+
+<section class="cart-page">
+  <div class="container">
+    <h1><i class="fas fa-shopping-cart"></i> Shopping Cart</h1>
+
+    <% if (cartItems.length === 0) { %>
+      <div class="empty-state">
+        <i class="fas fa-shopping-cart fa-3x"></i>
+        <h3>Your cart is empty</h3>
+        <p>Add some products to get started!</p>
+        <a href="/products" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Browse Products</a>
+      </div>
+    <% } else { %>
+      <div class="cart-layout">
+        <div class="cart-items">
+          <% cartItems.forEach(item => { %>
+            <div class="cart-item">
+              <a href="/product/<%= item.slug %>">
+                <img src="<%= item.image %>" alt="<%= item.name %>">
+              </a>
+              <div class="cart-item-info">
+                <a href="/product/<%= item.slug %>" class="cart-item-name"><%= item.name %></a>
+                <span class="cart-item-price">$<%= parseFloat(item.price).toFixed(2) %></span>
+                <span class="cart-item-stock <%= item.stock > 0 ? 'in-stock' : 'out-stock' %>">
+                  <%= item.stock > 0 ? item.stock + ' in stock' : 'Out of stock' %>
+                </span>
+              </div>
+              <div class="cart-item-actions">
+                <form action="/cart/update" method="POST" class="quantity-selector">
+                  <input type="hidden" name="cart_id" value="<%= item.id %>">
+                  <button type="submit" name="quantity" value="<%= item.quantity - 1 %>" class="qty-btn">-</button>
+                  <span class="qty-display"><%= item.quantity %></span>
+                  <button type="submit" name="quantity" value="<%= item.quantity + 1 %>" class="qty-btn">+</button>
+                </form>
+                <span class="cart-item-total">$<%= (parseFloat(item.price) * item.quantity).toFixed(2) %></span>
+                <form action="/cart/remove" method="POST">
+                  <input type="hidden" name="cart_id" value="<%= item.id %>">
+                  <button type="submit" class="btn-remove" title="Remove"><i class="fas fa-trash-alt"></i></button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+
+        <div class="cart-summary">
+          <h3>Order Summary</h3>
+          <div class="summary-row">
+            <span>Subtotal (<%= cartItems.reduce((a, b) => a + b.quantity, 0) %> items)</span>
+            <span>$<%= total.toFixed(2) %></span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping</span>
+            <span class="text-success">FREE</span>
+          </div>
+          <hr>
+          <div class="summary-row summary-total">
+            <span>Total</span>
+            <span>$<%= total.toFixed(2) %></span>
+          </div>
+          <a href="/cart/checkout" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-lock"></i> Proceed to Checkout
+          </a>
+          <a href="/products" class="btn btn-outline btn-block"><i class="fas fa-arrow-left"></i> Continue Shopping</a>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

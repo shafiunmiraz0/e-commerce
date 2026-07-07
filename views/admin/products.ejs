@@ -1,0 +1,131 @@
+<%- include('../partials/header') %>
+
+<section class="admin-page">
+  <div class="container">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="admin-user">
+          <i class="fas fa-user-shield fa-2x"></i>
+          <h3>Admin Panel</h3>
+          <span><%= user.username %></span>
+        </div>
+        <nav class="admin-nav">
+          <a href="/admin" class="admin-nav-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+          <a href="/admin/orders" class="admin-nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
+          <a href="/admin/products" class="admin-nav-link active"><i class="fas fa-box"></i> Products</a>
+          <a href="/admin/users" class="admin-nav-link"><i class="fas fa-users"></i> Users</a>
+          <hr>
+          <a href="/" class="admin-nav-link"><i class="fas fa-store"></i> View Store</a>
+          <a href="/logout" class="admin-nav-link text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-header-row">
+          <h2><i class="fas fa-box"></i> Products</h2>
+          <button class="btn btn-primary" onclick="document.getElementById('addProductModal').style.display='flex'">
+            <i class="fas fa-plus"></i> Add Product
+          </button>
+        </div>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Sold</th>
+                <th>Featured</th>
+                <th>Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% products.forEach(product => { %>
+                <tr>
+                  <td><img src="<%= product.image %>" alt="" class="table-thumb"></td>
+                  <td><strong><%= product.name %></strong></td>
+                  <td><span class="category-badge"><%= product.category_name || 'None' %></span></td>
+                  <td>
+                    <strong>$<%= parseFloat(product.price).toFixed(2) %></strong>
+                    <% if (product.original_price) { %>
+                      <small class="text-muted">was $<%= parseFloat(product.original_price).toFixed(2) %></small>
+                    <% } %>
+                  </td>
+                  <td><span class="<%= product.stock > 0 ? 'text-success' : 'text-danger' %>"><%= product.stock %></span></td>
+                  <td><%= product.sold %></td>
+                  <td><i class="fas fa-star<%= product.is_featured ? ' text-warning' : ' text-muted' %>"></i></td>
+                  <td><span class="status-badge status-<%= product.is_active ? 'active' : 'inactive' %>"><%= product.is_active ? 'Yes' : 'No' %></span></td>
+                  <td class="actions-cell">
+                    <a href="/admin/products/edit/<%= product.id %>" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
+                    <form action="/admin/products/delete/<%= product.id %>" method="POST" style="display:inline" onsubmit="return confirm('Delete this product?')">
+                      <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                    </form>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="addProductModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-plus"></i> Add New Product</h3>
+      <button class="modal-close" onclick="document.getElementById('addProductModal').style.display='none'">&times;</button>
+    </div>
+    <form action="/admin/products/add" method="POST">
+      <div class="form-group">
+        <label>Product Name</label>
+        <input type="text" name="name" required placeholder="Product name">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" placeholder="Product description"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Price ($)</label>
+          <input type="number" name="price" step="0.01" required placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Original Price ($)</label>
+          <input type="number" name="original_price" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Image URL</label>
+        <input type="url" name="image" placeholder="https://...">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category_id">
+            <option value="">Select category</option>
+            <% categories.forEach(cat => { %>
+              <option value="<%= cat.id %>"><%= cat.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Stock</label>
+          <input type="number" name="stock" value="0" placeholder="0">
+        </div>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" name="is_featured" id="is_featured">
+        <label for="is_featured">Featured Product</label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-plus"></i> Add Product</button>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,113 @@
+<%- include('partials/header') %>
+
+<section class="product-detail-page">
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="/">Home</a> / <a href="/products">Products</a> /
+      <% if (product.category_name) { %>
+        <a href="/products?category=<%= product.category_slug %>"><%= product.category_name %></a> /
+      <% } %>
+      <span><%= product.name %></span>
+    </nav>
+
+    <div class="product-detail">
+      <div class="product-gallery">
+        <img src="<%= product.image %>" alt="<%= product.name %>" class="main-image">
+      </div>
+
+      <div class="product-detail-info">
+        <h1><%= product.name %></h1>
+
+        <div class="detail-rating">
+          <% for (let i = 0; i < 5; i++) { %>
+            <i class="fas fa-star<%= i < Math.round(product.rating) ? '' : '-empty' %>"></i>
+          <% } %>
+          <span><%= product.rating %> (<%= product.reviews_count %> reviews)</span>
+          <span class="detail-sold"><%= product.sold %> sold</span>
+        </div>
+
+        <div class="detail-price">
+          <span class="current-price">$<%= parseFloat(product.price).toFixed(2) %></span>
+          <% if (product.original_price && product.original_price > product.price) { %>
+            <span class="original-price">$<%= parseFloat(product.original_price).toFixed(2) %></span>
+            <span class="discount-percent">-<%= Math.round((1 - product.price / product.original_price) * 100) %>% OFF</span>
+          <% } %>
+        </div>
+
+        <div class="detail-description">
+          <h3>Description</h3>
+          <p><%= product.description %></p>
+        </div>
+
+        <div class="detail-meta">
+          <div class="meta-item">
+            <span class="meta-label">Category:</span>
+            <span class="meta-value"><%= product.category_name || 'Uncategorized' %></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Stock:</span>
+            <span class="meta-value <%= product.stock > 0 ? 'in-stock' : 'out-stock' %>">
+              <%= product.stock > 0 ? product.stock + ' available' : 'Out of Stock' %>
+            </span>
+          </div>
+        </div>
+
+        <% if (product.stock > 0) { %>
+          <form action="/cart/add" method="POST" class="add-to-cart-form">
+            <input type="hidden" name="product_id" value="<%= product.id %>">
+            <div class="quantity-selector">
+              <button type="button" class="qty-btn" onclick="updateQty(-1)">-</button>
+              <input type="number" name="quantity" value="1" min="1" max="<%= product.stock %>" id="qty-input">
+              <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg add-to-cart-btn">
+              <i class="fas fa-shopping-cart"></i> Add to Cart
+            </button>
+          </form>
+        <% } else { %>
+          <button class="btn btn-secondary btn-lg" disabled><i class="fas fa-times"></i> Out of Stock</button>
+        <% } %>
+      </div>
+    </div>
+
+    <% if (related.length > 0) { %>
+      <div class="related-products">
+        <h2 class="section-title"><i class="fas fa-th-large"></i> Related Products</h2>
+        <div class="products-grid">
+          <% related.forEach(p => { %>
+            <div class="product-card">
+              <a href="/product/<%= p.slug %>" class="product-image-wrap">
+                <img src="<%= p.image %>" alt="<%= p.name %>" loading="lazy">
+                <% if (p.original_price && p.original_price > p.price) { %>
+                  <span class="discount-badge">-<%= Math.round((1 - p.price / p.original_price) * 100) %>%</span>
+                <% } %>
+              </a>
+              <div class="product-info">
+                <span class="product-category"><%= p.category_name %></span>
+                <a href="/product/<%= p.slug %>" class="product-name"><%= p.name %></a>
+                <div class="product-price">
+                  <span class="current-price">$<%= parseFloat(p.price).toFixed(2) %></span>
+                  <% if (p.original_price) { %>
+                    <span class="original-price">$<%= parseFloat(p.original_price).toFixed(2) %></span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<script>
+function updateQty(change) {
+  const input = document.getElementById('qty-input');
+  const newVal = parseInt(input.value) + change;
+  if (newVal >= 1 && newVal <= parseInt(input.max)) {
+    input.value = newVal;
+  }
+}
+</script>
+
+<%- include('partials/footer') %>
