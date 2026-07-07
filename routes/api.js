@@ -163,4 +163,116 @@ router.get('/wishlist/count', async (req, res) => {
   }
 });
 
+// ==================== PRODUCTS API (Load More) ====================
+
+router.get('/products', async (req, res) => {
+  try {
+    const { page, category, search, sort, min_price, max_price } = req.query;
+    const limit = 12;
+    const offset = ((parseInt(page) || 1) - 1) * limit;
+
+    let whereClause = 'WHERE p.is_active = true';
+    const params = [];
+    let paramIndex = 1;
+
+    if (category) {
+      whereClause += ` AND c.slug = $${paramIndex++}`;
+      params.push(category);
+    }
+    if (search) {
+      whereClause += ` AND (p.name ILIKE $${paramIndex} OR p.description ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex++;
+    }
+    if (min_price) {
+      whereClause += ` AND p.price >= $${paramIndex++}`;
+      params.push(parseFloat(min_price));
+    }
+    if (max_price) {
+      whereClause += ` AND p.price <= $${paramIndex++}`;
+      params.push(parseFloat(max_price));
+    }
+
+    let orderClause = 'ORDER BY p.created_at DESC';
+    if (sort === 'price_asc') orderClause = 'ORDER BY p.price ASC';
+    else if (sort === 'price_desc') orderClause = 'ORDER BY p.price DESC';
+    else if (sort === 'popular') orderClause = 'ORDER BY p.sold DESC';
+    else if (sort === 'rating') orderClause = 'ORDER BY p.rating DESC';
+
+    const products = await pool.query(
+      `SELECT p.*, c.name as category_name, c.slug as category_slug FROM products p LEFT JOIN categories c ON p.category_id = c.id ${whereClause} ${orderClause} LIMIT $${paramIndex++} OFFSET $${paramIndex}`,
+      [...params, limit, offset]
+    );
+
+    res.json({ success: true, products: products.rows });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, products: [] });
+  }
+});
+
+// ==================== REVIEWS API ====================
+
+router.post('/reviews', isAuthenticated, async (req, res) => {
+  try {
+    const { product_id, rating, title, comment } = req.body;
+    const r = parseInt(rating);
+    if (!product_id || !r || r < 1 || r > 5) {
+      return res.json({ success: false, message: 'Invalid rating' });
+    }
+
+    await pool.query(
+      'INSERT INTO reviews (product_id, user_id, rating, title, comment) VALUES ($1, $2, $3, $4, $5)',
+      [product_id, req.session.user.id, r, title || null, comment || null]
+    );
+
+    const stats = await pool.query(
+      'SELECT COUNT(*) as count, COALESCE(AVG(rating), 0) as avg FROM reviews WHERE product_id = $1',
+      [product_id]
+    );
+    await pool.query(
+      'UPDATE products SET reviews_count = $1, rating = $2 WHERE id = $3',
+      [parseInt(stats.rows[0].count), parseFloat(stats.rows[0].avg).toFixed(1), product_id]
+    );
+
+    const review = await pool.query(
+      `SELECT r.*, u.username, u.avatar FROM reviews r LEFT JOIN users u ON r.user_id = u.id WHERE r.product_id = $1 AND r.user_id = $2 ORDER BY r.created_at DESC LIMIT 1`,
+      [product_id, req.session.user.id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Review submitted!',
+      review: review.rows[0],
+      stats: { count: parseInt(stats.rows[0].count), avg: parseFloat(stats.rows[0].avg).toFixed(1) }
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: 'Failed to submit review' });
+  }
+});
+
+// ==================== SAVE FOR LATER ====================
+
+router.post('/cart/save-for-later', isAuthenticated, async (req, res) => {
+  try {
+    const { cart_id } = req.body;
+    const item = await pool.query('SELECT * FROM cart WHERE id = $1 AND user_id = $2', [cart_id, req.session.user.id]);
+    if (item.rows.length === 0) return res.json({ success: false, message: 'Item not found' });
+
+    const product_id = item.rows[0].product_id;
+    const existing = await pool.query('SELECT id FROM wishlist WHERE user_id = $1 AND product_id = $2', [req.session.user.id, product_id]);
+    if (existing.rows.length === 0) {
+      await pool.query('INSERT INTO wishlist (user_id, product_id) VALUES ($1, $2)', [req.session.user.id, product_id]);
+    }
+    await pool.query('DELETE FROM cart WHERE id = $1 AND user_id = $2', [cart_id, req.session.user.id]);
+
+    const countResult = await pool.query('SELECT COALESCE(SUM(quantity), 0) as count FROM cart WHERE user_id = $1', [req.session.user.id]);
+    res.json({ success: true, cartCount: parseInt(countResult.rows[0].count), message: 'Moved to wishlist' });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: 'Failed to save item' });
+  }
+});
+
 module.exports = router;

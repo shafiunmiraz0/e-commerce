@@ -67,11 +67,77 @@
         <% } %>
       </div>
 
-      <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('show')">
+      <button class="mobile-menu-btn" onclick="">
         <i class="fas fa-bars"></i>
       </button>
     </div>
   </nav>
+
+  <!-- Mobile drawer overlay -->
+  <div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
+  <!-- Mobile slide-in drawer -->
+  <div class="mobile-drawer" id="mobile-drawer">
+    <div class="mobile-drawer-header">
+      <h3><i class="fas fa-bolt" style="color:var(--primary)"></i> ShopVue</h3>
+      <button class="mobile-drawer-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mobile-drawer-links">
+      <a href="/products"><i class="fas fa-th-large"></i> All Products</a>
+      <% if (user) { %>
+        <a href="/wishlist"><i class="fas fa-heart"></i> Wishlist</a>
+        <a href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a>
+        <div class="drawer-divider"></div>
+        <a href="/account"><i class="fas fa-user-circle"></i> My Account</a>
+        <a href="/account/orders"><i class="fas fa-box"></i> My Orders</a>
+        <a href="/account/profile"><i class="fas fa-id-card"></i> Profile</a>
+        <% if (user.role === 'admin') { %>
+          <div class="drawer-divider"></div>
+          <a href="/admin"><i class="fas fa-cog"></i> Admin Panel</a>
+        <% } %>
+        <div class="drawer-divider"></div>
+        <a href="/logout" class="drawer-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      <% } else { %>
+        <div class="drawer-divider"></div>
+        <a href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
+        <a href="/register"><i class="fas fa-user-plus"></i> Sign Up</a>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Bottom tab bar (mobile only) -->
+  <div class="bottom-tab-bar">
+    <div class="bottom-tab-bar-inner">
+      <a href="/" class="bottom-tab <%= typeof title !== 'undefined' && title === 'Home' ? 'active' : '' %>">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="/products" class="bottom-tab <%= typeof title !== 'undefined' && title === 'Products' ? 'active' : '' %>">
+        <i class="fas fa-th-large"></i>
+        <span>Products</span>
+      </a>
+      <a href="/wishlist" class="bottom-tab">
+        <i class="fas fa-heart"></i>
+        <span>Wishlist</span>
+        <% if (typeof wishlistCount !== 'undefined' && wishlistCount > 0) { %>
+          <span class="tab-badge"><%= wishlistCount %></span>
+        <% } %>
+      </a>
+      <a href="/cart" class="bottom-tab">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Cart</span>
+        <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
+          <span class="tab-badge"><%= cartCount %></span>
+        <% } %>
+      </a>
+      <a href="<%= user ? '/account' : '/login' %>" class="bottom-tab">
+        <i class="fas fa-user"></i>
+        <span><%= user ? 'Account' : 'Login' %></span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Page transition overlay -->
+  <div class="page-transition-overlay" id="page-transition"></div>
 
   <main>
     <div class="container">

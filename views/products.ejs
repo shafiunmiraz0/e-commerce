@@ -13,47 +13,78 @@
       <aside class="filter-sidebar">
         <h3><i class="fas fa-filter"></i> Filters</h3>
 
-        <form class="filter-form" action="/products" method="GET">
+        <form class="filter-form" action="/products" method="GET" id="filter-form">
           <input type="hidden" name="search" value="<%= currentSearch %>">
+          <input type="hidden" name="sort" value="<%= currentSort %>">
 
           <div class="filter-group">
             <h4>Category</h4>
             <a href="/products?search=<%= currentSearch %>&sort=<%= currentSort %>" class="filter-link <%= !currentCategory ? 'active' : '' %>">All Categories</a>
             <% categories.forEach(cat => { %>
               <a href="/products?category=<%= cat.slug %>&search=<%= currentSearch %>&sort=<%= currentSort %>" class="filter-link <%= currentCategory === cat.slug ? 'active' : '' %>">
-                <%= cat.icon %> <%= cat.name %>
+                <i class="<%= cat.icon %>"></i> <%= cat.name %>
               </a>
             <% }) %>
           </div>
 
           <div class="filter-group">
+            <h4>Price Range</h4>
+            <div class="price-range-inputs">
+              <input type="number" name="min_price" placeholder="Min" min="0" step="0.01" value="<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>" class="price-input">
+              <span class="price-sep">-</span>
+              <input type="number" name="max_price" placeholder="Max" min="0" step="0.01" value="<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="price-input">
+              <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-check"></i></button>
+            </div>
+          </div>
+
+          <div class="filter-group">
             <h4>Sort By</h4>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>" class="filter-link <%= !currentSort ? 'active' : '' %>">Newest</a>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=popular" class="filter-link <%= currentSort === 'popular' ? 'active' : '' %>">Most Popular</a>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=price_asc" class="filter-link <%= currentSort === 'price_asc' ? 'active' : '' %>">Price: Low to High</a>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=price_desc" class="filter-link <%= currentSort === 'price_desc' ? 'active' : '' %>">Price: High to Low</a>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=rating" class="filter-link <%= currentSort === 'rating' ? 'active' : '' %>">Top Rated</a>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= !currentSort ? 'active' : '' %>">Newest</a>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=popular&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= currentSort === 'popular' ? 'active' : '' %>">Most Popular</a>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=price_asc&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= currentSort === 'price_asc' ? 'active' : '' %>">Price: Low to High</a>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=price_desc&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= currentSort === 'price_desc' ? 'active' : '' %>">Price: High to Low</a>
+            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=rating&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= currentSort === 'rating' ? 'active' : '' %>">Top Rated</a>
           </div>
         </form>
       </aside>
 
       <div class="products-main">
-        <% if (currentCategory || currentSearch) { %>
+        <% if (currentCategory || currentSearch || currentMinPrice || currentMaxPrice) { %>
           <div class="active-filters">
             <% if (currentCategory) { %>
               <span class="filter-tag">
                 Category: <%= categories.find(c => c.slug === currentCategory)?.name || currentCategory %>
-                <a href="/products?search=<%= currentSearch %>&sort=<%= currentSort %>"><i class="fas fa-times"></i></a>
+                <a href="/products?search=<%= currentSearch %>&sort=<%= currentSort %>&min_price=<%= currentMinPrice || '' %>&max_price=<%= currentMaxPrice || '' %>"><i class="fas fa-times"></i></a>
               </span>
             <% } %>
             <% if (currentSearch) { %>
               <span class="filter-tag">
                 Search: "<%= currentSearch %>"
-                <a href="/products?category=<%= currentCategory %>&sort=<%= currentSort %>"><i class="fas fa-times"></i></a>
+                <a href="/products?category=<%= currentCategory %>&sort=<%= currentSort %>&min_price=<%= currentMinPrice || '' %>&max_price=<%= currentMaxPrice || '' %>"><i class="fas fa-times"></i></a>
+              </span>
+            <% } %>
+            <% if (currentMinPrice) { %>
+              <span class="filter-tag">
+                Min: $<%= currentMinPrice %>
+                <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>&max_price=<%= currentMaxPrice || '' %>"><i class="fas fa-times"></i></a>
+              </span>
+            <% } %>
+            <% if (currentMaxPrice) { %>
+              <span class="filter-tag">
+                Max: $<%= currentMaxPrice %>
+                <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>&min_price=<%= currentMinPrice || '' %>"><i class="fas fa-times"></i></a>
               </span>
             <% } %>
           </div>
         <% } %>
+
+        <div class="products-toolbar">
+          <span class="results-count"><%= totalProducts %> results</span>
+          <div class="view-toggle">
+            <button class="view-btn active" data-view="grid" onclick="setView('grid')" title="Grid View"><i class="fas fa-th-large"></i></button>
+            <button class="view-btn" data-view="list" onclick="setView('list')" title="List View"><i class="fas fa-list"></i></button>
+          </div>
+        </div>
 
         <% if (products.length === 0) { %>
           <div class="empty-state">
@@ -63,18 +94,20 @@
             <a href="/products" class="btn btn-primary">Clear Filters</a>
           </div>
         <% } else { %>
-          <div class="products-grid">
-            <% products.forEach(product => { %>
-              <div class="product-card">
+          <div class="products-grid" id="products-container">
+            <% products.forEach((product, idx) => { %>
+              <div class="product-card reveal reveal-delay-<%= (idx % 4) + 1 %>">
                 <a href="/product/<%= product.slug %>" class="product-image-wrap">
                   <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy">
                   <% if (product.original_price && product.original_price > product.price) { %>
                     <span class="discount-badge">-<%= Math.round((1 - product.price / product.original_price) * 100) %>%</span>
                   <% } %>
-                  <button class="wishlist-toggle product-wishlist" data-product-id="<%= product.id %>">
-                    <i class="far fa-heart"></i>
-                  </button>
+                  <button class="wishlist-toggle product-wishlist" data-product-id="<%= product.id %>"><i class="far fa-heart"></i></button>
                 </a>
+                <div class="card-hover-actions">
+                  <a href="/product/<%= product.slug %>" class="btn btn-outline"><i class="fas fa-eye"></i> View</a>
+                  <button class="btn btn-primary card-quick-add" data-product-id="<%= product.id %>"><i class="fas fa-cart-plus"></i> Add</button>
+                </div>
                 <div class="product-info">
                   <span class="product-category"><%= product.category_name %></span>
                   <a href="/product/<%= product.slug %>" class="product-name"><%= product.name %></a>
@@ -96,16 +129,24 @@
             <% }) %>
           </div>
 
+          <% if (currentPage < totalPages) { %>
+            <div class="load-more-wrap">
+              <button class="btn btn-outline btn-lg load-more-btn" id="load-more-btn" data-page="<%= currentPage %>" data-total="<%= totalPages %>" data-category="<%= currentCategory %>" data-search="<%= currentSearch %>" data-sort="<%= currentSort %>" data-min-price="<%= currentMinPrice || '' %>" data-max-price="<%= currentMaxPrice || '' %>">
+                <i class="fas fa-plus"></i> Load More
+              </button>
+            </div>
+          <% } %>
+
           <% if (totalPages > 1) { %>
-            <div class="pagination">
+            <div class="pagination traditional-pagination">
               <% if (currentPage > 1) { %>
-                <a href="?page=<%= currentPage - 1 %>&category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>" class="page-link"><i class="fas fa-chevron-left"></i></a>
+                <a href="?page=<%= currentPage - 1 %>&category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>&min_price=<%= currentMinPrice || '' %>&max_price=<%= currentMaxPrice || '' %>" class="page-link"><i class="fas fa-chevron-left"></i></a>
               <% } %>
               <% for (let i = 1; i <= totalPages; i++) { %>
-                <a href="?page=<%= i %>&category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>" class="page-link <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+                <a href="?page=<%= i %>&category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>&min_price=<%= currentMinPrice || '' %>&max_price=<%= currentMaxPrice || '' %>" class="page-link <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
               <% } %>
               <% if (currentPage < totalPages) { %>
-                <a href="?page=<%= currentPage + 1 %>&category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>" class="page-link"><i class="fas fa-chevron-right"></i></a>
+                <a href="?page=<%= currentPage + 1 %>&category=<%= currentCategory %>&search=<%= currentSearch %>&sort=<%= currentSort %>&min_price=<%= currentMinPrice || '' %>&max_price=<%= currentMaxPrice || '' %>" class="page-link"><i class="fas fa-chevron-right"></i></a>
               <% } %>
             </div>
           <% } %>
@@ -114,5 +155,62 @@
     </div>
   </div>
 </section>
+
+<script>
+// Grid/List view toggle
+function setView(view) {
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.view-btn[data-view="${view}"]`).classList.add('active');
+  const container = document.getElementById('products-container');
+  container.className = view === 'list' ? 'products-list' : 'products-grid';
+  localStorage.setItem('productView', view);
+}
+const savedView = localStorage.getItem('productView');
+if (savedView) setView(savedView);
+
+// Load More
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('load-more-btn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    let page = parseInt(btn.dataset.page) + 1;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    btn.disabled = true;
+    const params = new URLSearchParams({ page, category: btn.dataset.category, search: btn.dataset.search, sort: btn.dataset.sort, min_price: btn.dataset.minPrice, max_price: btn.dataset.maxPrice });
+    const res = await fetch(`/api/products?${params}`);
+    const data = await res.json();
+    if (data.success && data.products.length > 0) {
+      const container = document.getElementById('products-container');
+      data.products.forEach(p => {
+        const discount = p.original_price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+        container.insertAdjacentHTML('beforeend', `
+          <div class="product-card">
+            <a href="/product/${p.slug}" class="product-image-wrap">
+              <img src="${p.image}" alt="${p.name}" loading="lazy">
+              ${discount > 0 ? `<span class="discount-badge">-${discount}%</span>` : ''}
+              <button class="wishlist-toggle product-wishlist" data-product-id="${p.id}"><i class="far fa-heart"></i></button>
+            </a>
+            <div class="product-info">
+              <span class="product-category">${p.category_name || ''}</span>
+              <a href="/product/${p.slug}" class="product-name">${p.name}</a>
+              <div class="product-price">
+                <span class="current-price">$${parseFloat(p.price).toFixed(2)}</span>
+                ${p.original_price ? `<span class="original-price">$${parseFloat(p.original_price).toFixed(2)}</span>` : ''}
+              </div>
+              <span class="product-sold">${p.sold} sold</span>
+            </div>
+          </div>
+        `);
+      });
+      btn.dataset.page = page;
+      btn.innerHTML = '<i class="fas fa-plus"></i> Load More';
+      btn.disabled = false;
+      if (page >= parseInt(btn.dataset.total)) btn.style.display = 'none';
+    } else {
+      btn.style.display = 'none';
+    }
+  });
+});
+</script>
 
 <%- include('partials/footer') %>

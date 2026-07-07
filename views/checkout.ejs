@@ -4,59 +4,139 @@
   <div class="container">
     <h1><i class="fas fa-lock"></i> Checkout</h1>
 
-    <form action="/cart/place-order" method="POST" class="checkout-layout">
+    <div class="checkout-stepper">
+      <div class="stepper-step active" data-step="1">
+        <div class="step-circle">1</div>
+        <span>Shipping</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="stepper-step" data-step="2">
+        <div class="step-circle">2</div>
+        <span>Payment</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="stepper-step" data-step="3">
+        <div class="step-circle">3</div>
+        <span>Confirm</span>
+      </div>
+    </div>
+
+    <form action="/cart/place-order" method="POST" class="checkout-layout" id="checkout-form">
       <div class="checkout-form">
-        <div class="checkout-section">
+        <!-- Step 1: Shipping -->
+        <div class="checkout-section checkout-step-content active" data-step="1">
           <h3><i class="fas fa-truck"></i> Shipping Information</h3>
           <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" name="shipping_name" value="<%= profile.full_name || '' %>" required placeholder="Your full name">
+            <label>Full Name <span class="required">*</span></label>
+            <input type="text" name="shipping_name" value="<%= profile.full_name || '' %>" required placeholder="Your full name" class="validate-field" data-label="Full name">
+            <span class="field-error"></span>
           </div>
           <div class="form-group">
-            <label>Address</label>
-            <textarea name="shipping_address" required placeholder="Street address, apartment, suite, etc."><%= profile.address || '' %></textarea>
+            <label>Address <span class="required">*</span></label>
+            <textarea name="shipping_address" required placeholder="Street address, apartment, suite, etc." class="validate-field" data-label="Address"><%= profile.address || '' %></textarea>
+            <span class="field-error"></span>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>City</label>
-              <input type="text" name="shipping_city" value="<%= profile.city || '' %>" required placeholder="City">
+              <label>City <span class="required">*</span></label>
+              <input type="text" name="shipping_city" value="<%= profile.city || '' %>" required placeholder="City" class="validate-field" data-label="City">
+              <span class="field-error"></span>
             </div>
             <div class="form-group">
-              <label>Country</label>
-              <input type="text" name="shipping_country" value="<%= profile.country || '' %>" required placeholder="Country">
+              <label>Country <span class="required">*</span></label>
+              <select name="shipping_country" required class="validate-field" data-label="Country">
+                <option value="">Select country</option>
+                <option value="US" <%= profile.country === 'US' ? 'selected' : '' %>>United States</option>
+                <option value="UK" <%= profile.country === 'UK' ? 'selected' : '' %>>United Kingdom</option>
+                <option value="CA" <%= profile.country === 'CA' ? 'selected' : '' %>>Canada</option>
+                <option value="AU" <%= profile.country === 'AU' ? 'selected' : '' %>>Australia</option>
+                <option value="DE" <%= profile.country === 'DE' ? 'selected' : '' %>>Germany</option>
+                <option value="FR" <%= profile.country === 'FR' ? 'selected' : '' %>>France</option>
+                <option value="JP" <%= profile.country === 'JP' ? 'selected' : '' %>>Japan</option>
+                <option value="CN" <%= profile.country === 'CN' ? 'selected' : '' %>>China</option>
+                <option value="IN" <%= profile.country === 'IN' ? 'selected' : '' %>>India</option>
+                <option value="BR" <%= profile.country === 'BR' ? 'selected' : '' %>>Brazil</option>
+                <option value="MX" <%= profile.country === 'MX' ? 'selected' : '' %>>Mexico</option>
+                <option value="NG" <%= profile.country === 'NG' ? 'selected' : '' %>>Nigeria</option>
+                <option value="ZA" <%= profile.country === 'ZA' ? 'selected' : '' %>>South Africa</option>
+                <option value="AE" <%= profile.country === 'AE' ? 'selected' : '' %>>United Arab Emirates</option>
+                <option value="SA" <%= profile.country === 'SA' ? 'selected' : '' %>>Saudi Arabia</option>
+                <option value="SG" <%= profile.country === 'SG' ? 'selected' : '' %>>Singapore</option>
+                <option value="KR" <%= profile.country === 'KR' ? 'selected' : '' %>>South Korea</option>
+                <option value="IT" <%= profile.country === 'IT' ? 'selected' : '' %>>Italy</option>
+                <option value="ES" <%= profile.country === 'ES' ? 'selected' : '' %>>Spain</option>
+                <option value="NL" <%= profile.country === 'NL' ? 'selected' : '' %>>Netherlands</option>
+              </select>
+              <span class="field-error"></span>
             </div>
           </div>
           <div class="form-group">
-            <label>Phone</label>
-            <input type="text" name="shipping_phone" value="<%= profile.phone || '' %>" required placeholder="Phone number">
+            <label>Phone <span class="required">*</span></label>
+            <input type="tel" name="shipping_phone" value="<%= profile.phone || '' %>" required placeholder="+1 (555) 123-4567" class="validate-field" data-label="Phone">
+            <span class="field-error"></span>
+          </div>
+          <div class="step-actions">
+            <span></span>
+            <button type="button" class="btn btn-primary" onclick="goToStep(2)">Continue to Payment <i class="fas fa-arrow-right"></i></button>
           </div>
         </div>
 
-        <div class="checkout-section">
+        <!-- Step 2: Payment -->
+        <div class="checkout-section checkout-step-content" data-step="2">
           <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
           <div class="payment-options">
             <label class="payment-option active">
               <input type="radio" name="payment_method" value="cod" checked onchange="selectPayment(this)">
               <span class="payment-icon"><i class="fas fa-money-bill-wave"></i></span>
-              <span>Cash on Delivery</span>
+              <div><strong>Cash on Delivery</strong><span class="payment-desc">Pay when you receive</span></div>
             </label>
             <label class="payment-option">
               <input type="radio" name="payment_method" value="card" onchange="selectPayment(this)">
               <span class="payment-icon"><i class="fas fa-credit-card"></i></span>
-              <span>Credit/Debit Card</span>
+              <div><strong>Credit / Debit Card</strong><span class="payment-desc">Visa, Mastercard, AMEX</span></div>
             </label>
             <label class="payment-option">
               <input type="radio" name="payment_method" value="paypal" onchange="selectPayment(this)">
               <span class="payment-icon"><i class="fab fa-paypal"></i></span>
-              <span>PayPal</span>
+              <div><strong>PayPal</strong><span class="payment-desc">Pay with your PayPal account</span></div>
             </label>
+          </div>
+          <div class="form-group" style="margin-top: 16px;">
+            <label>Order Notes (Optional)</label>
+            <textarea name="notes" placeholder="Special instructions for your order..."></textarea>
+          </div>
+          <div class="step-actions">
+            <button type="button" class="btn btn-outline" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+            <button type="button" class="btn btn-primary" onclick="goToStep(3)">Review Order <i class="fas fa-arrow-right"></i></button>
           </div>
         </div>
 
-        <div class="checkout-section">
-          <h3><i class="fas fa-sticky-note"></i> Order Notes (Optional)</h3>
-          <div class="form-group">
-            <textarea name="notes" placeholder="Special instructions for your order..."></textarea>
+        <!-- Step 3: Confirm -->
+        <div class="checkout-section checkout-step-content" data-step="3">
+          <h3><i class="fas fa-clipboard-check"></i> Review & Confirm</h3>
+          <div class="confirm-summary">
+            <div class="confirm-row">
+              <span class="confirm-label"><i class="fas fa-truck"></i> Shipping to</span>
+              <span class="confirm-value" id="confirm-shipping"></span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label"><i class="fas fa-credit-card"></i> Payment</span>
+              <span class="confirm-value" id="confirm-payment">Cash on Delivery</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-label"><i class="fas fa-calendar"></i> Estimated Delivery</span>
+              <span class="confirm-value"><%= new Date(Date.now() + 5*24*60*60*1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %> - <%= new Date(Date.now() + 10*24*60*60*1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
+            </div>
+          </div>
+          <div class="step-actions">
+            <button type="button" class="btn btn-outline" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+            <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-check"></i> Place Order — $<%= total.toFixed(2) %></button>
+          </div>
+          <div class="checkout-trust">
+            <div class="trust-badge"><i class="fas fa-shield-alt"></i><span>Secure Checkout</span></div>
+            <div class="trust-badge"><i class="fas fa-lock"></i><span>SSL Encrypted</span></div>
+            <div class="trust-badge"><i class="fas fa-undo"></i><span>30-Day Returns</span></div>
+            <div class="trust-badge"><i class="fas fa-headset"></i><span>24/7 Support</span></div>
           </div>
         </div>
       </div>
@@ -96,19 +176,82 @@
           <span>Total</span>
           <span class="checkout-total-amount">$<%= total.toFixed(2) %></span>
         </div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg">
-          <i class="fas fa-check"></i> Place Order
-        </button>
       </div>
     </form>
   </div>
 </section>
 
 <script>
+let currentStep = 1;
+
+function goToStep(step) {
+  if (step > currentStep && !validateStep(currentStep)) return;
+  currentStep = step;
+  document.querySelectorAll('.stepper-step').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.step) <= step);
+    s.classList.toggle('completed', parseInt(s.dataset.step) < step);
+  });
+  document.querySelectorAll('.checkout-step-content').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.step) === step);
+  });
+  if (step === 3) updateConfirm();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateStep(step) {
+  const section = document.querySelector(`.checkout-step-content[data-step="${step}"]`);
+  const fields = section.querySelectorAll('.validate-field');
+  let valid = true;
+  fields.forEach(field => {
+    const error = field.parentElement.querySelector('.field-error');
+    if (!field.value.trim()) {
+      field.classList.add('field-invalid');
+      if (error) error.textContent = field.dataset.label + ' is required';
+      valid = false;
+    } else {
+      field.classList.remove('field-invalid');
+      if (error) error.textContent = '';
+    }
+  });
+  if (!valid) showToast('Please fill in all required fields', 'error');
+  return valid;
+}
+
+function updateConfirm() {
+  const form = document.getElementById('checkout-form');
+  const name = form.querySelector('[name="shipping_name"]').value;
+  const city = form.querySelector('[name="shipping_city"]').value;
+  const country = form.querySelector('[name="shipping_country"]').value;
+  const payment = form.querySelector('[name="payment_method"]:checked').value;
+  document.getElementById('confirm-shipping').textContent = name + ', ' + city + ', ' + country;
+  const paymentLabels = { cod: 'Cash on Delivery', card: 'Credit/Debit Card', paypal: 'PayPal' };
+  document.getElementById('confirm-payment').textContent = paymentLabels[payment] || payment;
+}
+
 function selectPayment(radio) {
   document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('active'));
   radio.closest('.payment-option').classList.add('active');
 }
+
+document.querySelectorAll('.validate-field').forEach(field => {
+  field.addEventListener('blur', () => {
+    const error = field.parentElement.querySelector('.field-error');
+    if (!field.value.trim()) {
+      field.classList.add('field-invalid');
+      if (error) error.textContent = field.dataset.label + ' is required';
+    } else {
+      field.classList.remove('field-invalid');
+      if (error) error.textContent = '';
+    }
+  });
+  field.addEventListener('input', () => {
+    if (field.value.trim()) {
+      field.classList.remove('field-invalid');
+      const error = field.parentElement.querySelector('.field-error');
+      if (error) error.textContent = '';
+    }
+  });
+});
 </script>
 
 <%- include('partials/footer') %>

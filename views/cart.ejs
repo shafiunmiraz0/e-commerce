@@ -12,6 +12,26 @@
         <a href="/products" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Browse Products</a>
       </div>
     <% } else { %>
+      <% const freeShippingThreshold = 50; %>
+      <% const remaining = Math.max(0, freeShippingThreshold - total); %>
+      <% const progress = Math.min(100, (total / freeShippingThreshold) * 100); %>
+
+      <% if (remaining > 0) { %>
+        <div class="shipping-progress">
+          <div class="shipping-progress-text">
+            <i class="fas fa-truck"></i>
+            Add <strong>$<%= remaining.toFixed(2) %></strong> more for <strong>FREE shipping</strong>!
+          </div>
+          <div class="shipping-progress-bar">
+            <div class="shipping-progress-fill" style="width: <%= progress %>%"></div>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="shipping-progress shipping-complete">
+          <i class="fas fa-check-circle"></i> You've unlocked <strong>FREE shipping</strong>!
+        </div>
+      <% } %>
+
       <div class="cart-layout">
         <div class="cart-items">
           <% cartItems.forEach(item => { %>
@@ -33,9 +53,14 @@
                   <button type="button" class="qty-btn ajax-qty-btn" data-change="1">+</button>
                 </div>
                 <span class="cart-item-total">$<%= (parseFloat(item.price) * item.quantity).toFixed(2) %></span>
-                <button type="button" class="btn-remove ajax-remove-btn" data-cart-id="<%= item.id %>" title="Remove">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
+                <div class="cart-item-btns">
+                  <button type="button" class="btn-save-later" data-cart-id="<%= item.id %>" title="Save for Later">
+                    <i class="far fa-heart"></i>
+                  </button>
+                  <button type="button" class="btn-remove ajax-remove-btn" data-cart-id="<%= item.id %>" title="Remove">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
               </div>
             </div>
           <% }) %>
@@ -64,9 +89,18 @@
             <span>Total</span>
             <span class="summary-total-amount">$<%= total.toFixed(2) %></span>
           </div>
+          <div class="delivery-estimate-mini">
+            <i class="fas fa-truck"></i>
+            <span>Est. delivery: <%= new Date(Date.now() + 5*24*60*60*1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %> - <%= new Date(Date.now() + 10*24*60*60*1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
+          </div>
           <a href="/cart/checkout" class="btn btn-primary btn-block btn-lg">
             <i class="fas fa-lock"></i> Proceed to Checkout
           </a>
+          <div class="cart-trust-badges">
+            <span><i class="fas fa-shield-alt"></i> Secure</span>
+            <span><i class="fas fa-undo"></i> Returns</span>
+            <span><i class="fas fa-headset"></i> Support</span>
+          </div>
           <a href="/products" class="btn btn-outline btn-block"><i class="fas fa-arrow-left"></i> Continue Shopping</a>
         </div>
       </div>
@@ -101,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.summary-total-amount').textContent = '$' + result.total;
         updateCartBadge(result.cartCount);
         showToast(result.message, 'success');
+        updateShippingProgress(parseFloat(result.total));
       } else {
         showToast(result.message, 'error');
       }
@@ -127,7 +162,44 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  document.querySelectorAll('.btn-save-later').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const cartId = btn.dataset.cartId;
+      const result = await api.post('/api/cart/save-for-later', { cart_id: parseInt(cartId) });
+      if (result.success) {
+        const item = document.querySelector(`.cart-item[data-cart-id="${cartId}"]`);
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(20px)';
+        setTimeout(() => {
+          item.remove();
+          if (document.querySelectorAll('.cart-item').length === 0) location.reload();
+        }, 300);
+        updateCartBadge(result.cartCount);
+        showToast(result.message, 'success');
+      } else {
+        showToast(result.message, 'error');
+      }
+    });
+  });
 });
+
+function updateShippingProgress(subtotal) {
+  const threshold = 50;
+  const remaining = Math.max(0, threshold - subtotal);
+  const progressEl = document.querySelector('.shipping-progress');
+  if (!progressEl) return;
+  if (remaining <= 0) {
+    progressEl.className = 'shipping-progress shipping-complete';
+    progressEl.innerHTML = '<i class="fas fa-check-circle"></i> You\'ve unlocked <strong>FREE shipping</strong>!';
+  } else {
+    const pct = Math.min(100, (subtotal / threshold) * 100);
+    const fill = progressEl.querySelector('.shipping-progress-fill');
+    if (fill) fill.style.width = pct + '%';
+    const text = progressEl.querySelector('.shipping-progress-text');
+    if (text) text.innerHTML = '<i class="fas fa-truck"></i> Add <strong>$' + remaining.toFixed(2) + '</strong> more for <strong>FREE shipping</strong>!';
+  }
+}
 </script>
 
 <%- include('partials/footer') %>

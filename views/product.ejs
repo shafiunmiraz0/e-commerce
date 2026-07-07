@@ -40,9 +40,18 @@
           <% } %>
         </div>
 
-        <div class="detail-description">
-          <h3>Description</h3>
-          <p><%= product.description %></p>
+        <% if (product.stock > 0 && product.stock <= 10) { %>
+          <div class="urgency-badge"><i class="fas fa-fire"></i> Only <%= product.stock %> left in stock — order soon!</div>
+        <% } %>
+
+        <div class="viewers-badge"><i class="fas fa-eye"></i> <span id="viewer-count"><%= viewers %></span> people are viewing this right now</div>
+
+        <div class="delivery-estimate">
+          <i class="fas fa-truck"></i>
+          <div>
+            <strong>Free Delivery</strong>
+            <span>Estimated arrival: <%= new Date(Date.now() + 5*24*60*60*1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %> - <%= new Date(Date.now() + 10*24*60*60*1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
+          </div>
         </div>
 
         <div class="detail-meta">
@@ -50,16 +59,10 @@
             <span class="meta-label">Category:</span>
             <span class="meta-value"><%= product.category_name || 'Uncategorized' %></span>
           </div>
-          <div class="meta-item">
-            <span class="meta-label">Stock:</span>
-            <span class="meta-value <%= product.stock > 0 ? 'in-stock' : 'out-stock' %>">
-              <%= product.stock > 0 ? product.stock + ' available' : 'Out of Stock' %>
-            </span>
-          </div>
         </div>
 
         <% if (product.stock > 0) { %>
-          <div class="product-actions">
+          <div class="product-actions" id="product-actions">
             <div class="add-to-cart-form">
               <div class="quantity-selector">
                 <button type="button" class="qty-btn" onclick="updateQty(-1)">-</button>
@@ -84,8 +87,137 @@
         <% } else { %>
           <button class="btn btn-secondary btn-lg" disabled><i class="fas fa-times"></i> Out of Stock</button>
         <% } %>
+
+        <div class="social-share">
+          <span>Share:</span>
+          <a href="https://wa.me/?text=<%= encodeURIComponent(product.name + ' - $' + parseFloat(product.price).toFixed(2) + ' ' + 'http://' + (typeof host !== 'undefined' ? host : 'localhost:3000') + '/product/' + product.slug) %>" target="_blank" class="share-btn share-whatsapp"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent('http://' + (typeof host !== 'undefined' ? host : 'localhost:3000') + '/product/' + product.slug) %>" target="_blank" class="share-btn share-facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://twitter.com/intent/tweet?url=<%= encodeURIComponent('http://' + (typeof host !== 'undefined' ? host : 'localhost:3000') + '/product/' + product.slug) %>&text=<%= encodeURIComponent(product.name) %>" target="_blank" class="share-btn share-twitter"><i class="fab fa-twitter"></i></a>
+          <a href="https://pinterest.com/pin/create/button/?url=<%= encodeURIComponent('http://' + (typeof host !== 'undefined' ? host : 'localhost:3000') + '/product/' + product.slug) %>&media=<%= encodeURIComponent(product.image) %>&description=<%= encodeURIComponent(product.name) %>" target="_blank" class="share-btn share-pinterest"><i class="fab fa-pinterest-p"></i></a>
+        </div>
       </div>
     </div>
+
+    <!-- Product Tabs -->
+    <div class="product-tabs">
+      <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('description')"><i class="fas fa-align-left"></i> Description</button>
+        <button class="tab-btn" onclick="switchTab('specifications')"><i class="fas fa-list-ul"></i> Specifications</button>
+        <button class="tab-btn" onclick="switchTab('reviews')"><i class="fas fa-star"></i> Reviews (<%= reviews.length %>)</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-description">
+        <p><%= product.description %></p>
+      </div>
+
+      <div class="tab-panel" id="tab-specifications">
+        <table class="specs-table">
+          <tr><td>Category</td><td><%= product.category_name || 'N/A' %></td></tr>
+          <tr><td>Availability</td><td class="<%= product.stock > 0 ? 'text-success' : 'text-danger' %>"><%= product.stock > 0 ? 'In Stock (' + product.stock + ')' : 'Out of Stock' %></td></tr>
+          <tr><td>Rating</td><td><%= product.rating %> / 5.0</td></tr>
+          <tr><td>Reviews</td><td><%= product.reviews_count %></td></tr>
+          <tr><td>Sold</td><td><%= product.sold %></td></tr>
+        </table>
+      </div>
+
+      <div class="tab-panel" id="tab-reviews">
+        <div class="reviews-summary">
+          <div class="reviews-avg">
+            <span class="avg-number"><%= parseFloat(reviewStats.avg_rating || product.rating).toFixed(1) %></span>
+            <div class="avg-stars">
+              <% for (let i = 0; i < 5; i++) { %>
+                <i class="fas fa-star<%= i < Math.round(reviewStats.avg_rating || product.rating) ? '' : '-empty' %>"></i>
+              <% } %>
+            </div>
+            <span class="avg-count"><%= reviewStats.total || product.reviews_count %> reviews</span>
+          </div>
+          <div class="reviews-bars">
+            <% [5,4,3,2,1].forEach(star => { %>
+              <div class="bar-row">
+                <span class="bar-label"><%= star %> <i class="fas fa-star"></i></span>
+                <div class="bar-track"><div class="bar-fill" style="width: <%= (reviewStats.total > 0 ? ((reviewStats['stars' + star] || 0) / reviewStats.total * 100) : 0) %>%"></div></div>
+                <span class="bar-count"><%= reviewStats['stars' + star] || 0 %></span>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+
+        <% if (typeof user !== 'undefined' && user) { %>
+          <div class="review-form-wrap">
+            <h4>Write a Review</h4>
+            <div class="review-stars-input" id="review-stars">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <i class="far fa-star" data-rating="<%= i %>" onclick="setReviewRating(<%= i %>)"></i>
+              <% } %>
+            </div>
+            <input type="text" id="review-title" placeholder="Review title (optional)" class="review-input">
+            <textarea id="review-comment" placeholder="Share your experience..." class="review-textarea"></textarea>
+            <button type="button" class="btn btn-primary" onclick="submitReview(<%= product.id %>)"><i class="fas fa-paper-plane"></i> Submit Review</button>
+          </div>
+        <% } else { %>
+          <div class="review-login-prompt">
+            <a href="/login?returnTo=/product/<%= product.slug %>">Sign in</a> to write a review
+          </div>
+        <% } %>
+
+        <div class="reviews-list" id="reviews-list">
+          <% reviews.forEach(review => { %>
+            <div class="review-item">
+              <div class="review-header">
+                <div class="review-user">
+                  <div class="review-avatar"><i class="fas fa-user"></i></div>
+                  <div>
+                    <strong><%= review.username %></strong>
+                    <div class="review-stars">
+                      <% for (let i = 0; i < 5; i++) { %>
+                        <i class="fas fa-star<%= i < review.rating ? '' : '-empty' %>"></i>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+                <span class="review-date"><%= new Date(review.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+              </div>
+              <% if (review.title) { %>
+                <div class="review-title"><%= review.title %></div>
+              <% } %>
+              <% if (review.comment) { %>
+                <p class="review-comment"><%= review.comment %></p>
+              <% } %>
+            </div>
+          <% }) %>
+          <% if (reviews.length === 0) { %>
+            <div class="no-reviews">No reviews yet. Be the first to review this product!</div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <% if (crossSell.length > 0) { %>
+      <div class="cross-sell-section">
+        <h2 class="section-title"><i class="fas fa-shopping-basket"></i> Frequently Bought Together</h2>
+        <div class="cross-sell-grid">
+          <% crossSell.forEach(p => { %>
+            <div class="product-card">
+              <a href="/product/<%= p.slug %>" class="product-image-wrap">
+                <img src="<%= p.image %>" alt="<%= p.name %>" loading="lazy">
+                <% if (p.original_price && p.original_price > p.price) { %>
+                  <span class="discount-badge">-<%= Math.round((1 - p.price / p.original_price) * 100) %>%</span>
+                <% } %>
+              </a>
+              <div class="product-info">
+                <a href="/product/<%= p.slug %>" class="product-name"><%= p.name %></a>
+                <div class="product-price">
+                  <span class="current-price">$<%= parseFloat(p.price).toFixed(2) %></span>
+                  <% if (p.original_price) { %>
+                    <span class="original-price">$<%= parseFloat(p.original_price).toFixed(2) %></span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
 
     <% if (related.length > 0) { %>
       <div class="related-products">
@@ -98,9 +230,7 @@
                 <% if (p.original_price && p.original_price > p.price) { %>
                   <span class="discount-badge">-<%= Math.round((1 - p.price / p.original_price) * 100) %>%</span>
                 <% } %>
-                <button class="wishlist-toggle product-wishlist" data-product-id="<%= p.id %>">
-                  <i class="far fa-heart"></i>
-                </button>
+                <button class="wishlist-toggle product-wishlist" data-product-id="<%= p.id %>"><i class="far fa-heart"></i></button>
               </a>
               <div class="product-info">
                 <span class="product-category"><%= p.category_name %></span>
@@ -120,6 +250,33 @@
   </div>
 </section>
 
+<!-- Sticky Add to Cart Bar -->
+<div class="sticky-cart-bar" id="sticky-cart-bar">
+  <div class="container">
+    <div class="sticky-cart-inner">
+      <div class="sticky-cart-info">
+        <img src="<%= product.image %>" alt="<%= product.name %>" class="sticky-cart-img">
+        <div>
+          <div class="sticky-cart-name"><%= product.name %></div>
+          <div class="sticky-cart-price">$<%= parseFloat(product.price).toFixed(2) %></div>
+        </div>
+      </div>
+      <div class="sticky-cart-actions">
+        <% if (product.stock > 0) { %>
+          <button type="button" class="btn btn-outline ajax-add-to-cart" data-product-id="<%= product.id %>" data-quantity="1"><i class="fas fa-shopping-cart"></i> Add to Cart</button>
+          <form action="/cart/buy-now" method="POST" style="display:inline;">
+            <input type="hidden" name="product_id" value="<%= product.id %>">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-bolt"></i> Buy Now</button>
+          </form>
+        <% } else { %>
+          <button class="btn btn-secondary" disabled>Out of Stock</button>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 function updateQty(change) {
   const input = document.getElementById('qty-input');
@@ -127,9 +284,85 @@ function updateQty(change) {
   if (newVal >= 1 && newVal <= parseInt(input.max)) {
     input.value = newVal;
     document.getElementById('buy-now-qty').value = newVal;
-    document.querySelector('.ajax-add-to-cart').dataset.quantity = newVal;
+    document.querySelector('.product-detail-info .ajax-add-to-cart').dataset.quantity = newVal;
   }
 }
+
+// Tabs
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${name}')"]`).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// Sticky cart bar
+window.addEventListener('scroll', () => {
+  const bar = document.getElementById('sticky-cart-bar');
+  const actions = document.getElementById('product-actions');
+  if (!bar || !actions) return;
+  const rect = actions.getBoundingClientRect();
+  bar.classList.toggle('visible', rect.bottom < 0);
+});
+
+// Review rating
+let selectedRating = 0;
+function setReviewRating(r) {
+  selectedRating = r;
+  document.querySelectorAll('#review-stars i').forEach((star, i) => {
+    star.className = i < r ? 'fas fa-star' : 'far fa-star';
+  });
+}
+
+async function submitReview(productId) {
+  if (!selectedRating) return showToast('Please select a rating', 'error');
+  const title = document.getElementById('review-title').value;
+  const comment = document.getElementById('review-comment').value;
+  const result = await api.post('/api/reviews', { product_id: productId, rating: selectedRating, title, comment });
+  if (result.success) {
+    showToast(result.message, 'success');
+    const list = document.getElementById('reviews-list');
+    const html = `<div class="review-item" style="animation: fadeIn 0.3s ease">
+      <div class="review-header">
+        <div class="review-user">
+          <div class="review-avatar"><i class="fas fa-user"></i></div>
+          <div><strong>${result.review.username}</strong><div class="review-stars">${'★'.repeat(selectedRating)}${'☆'.repeat(5 - selectedRating)}</div></div>
+        </div>
+        <span class="review-date">Just now</span>
+      </div>
+      ${title ? `<div class="review-title">${title}</div>` : ''}
+      ${comment ? `<p class="review-comment">${comment}</p>` : ''}
+    </div>`;
+    list.insertAdjacentHTML('afterbegin', html);
+    document.getElementById('review-title').value = '';
+    document.getElementById('review-comment').value = '';
+    selectedRating = 0;
+    document.querySelectorAll('#review-stars i').forEach(s => s.className = 'far fa-star');
+  } else {
+    showToast(result.message, 'error');
+  }
+}
+
+// Simulate viewer count fluctuation
+setInterval(() => {
+  const el = document.getElementById('viewer-count');
+  if (el) {
+    const current = parseInt(el.textContent);
+    el.textContent = Math.max(3, current + Math.floor(Math.random() * 5) - 2);
+  }
+}, 8000);
+</script>
+
+<script>
+(function() {
+  const product = { id: <%= product.id %>, name: '<%= product.name.replace(/'/g, "\\'") %>', slug: '<%= product.slug %>', image: '<%= product.image %>', price: '<%= product.price %>', original_price: '<%= product.original_price || '' %>' };
+  const discount = product.original_price ? Math.round((1 - product.price / product.original_price) * 100) : 0;
+  let viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+  viewed = viewed.filter(p => p.id !== product.id);
+  viewed.unshift({ ...product, discount });
+  if (viewed.length > 20) viewed = viewed.slice(0, 20);
+  localStorage.setItem('recentlyViewed', JSON.stringify(viewed));
+})();
 </script>
 
 <%- include('partials/footer') %>

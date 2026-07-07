@@ -1,30 +1,51 @@
 <%- include('partials/header') %>
 
-<section class="hero">
+<section class="hero-carousel">
+  <div class="hero-slides">
+    <% featured.slice(0, 4).forEach((product, i) => { %>
+      <div class="hero-slide <%= i === 0 ? 'active' : '' %>" style="background-image: url('<%= product.image %>')">
+        <div class="hero-overlay"></div>
+        <div class="container hero-slide-content">
+          <span class="hero-badge"><%= product.category_name %></span>
+          <h1><%= product.name %></h1>
+          <p class="hero-price">From <strong>$<%= parseFloat(product.price).toFixed(2) %></strong>
+            <% if (product.original_price) { %>
+              <span class="hero-original">$<%= parseFloat(product.original_price).toFixed(2) %></span>
+              <span class="hero-discount">-<%= Math.round((1 - product.price / product.original_price) * 100) %>%</span>
+            <% } %>
+          </p>
+          <a href="/product/<%= product.slug %>" class="btn btn-primary btn-lg"><i class="fas fa-shopping-bag"></i> Shop Now</a>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+  <button class="hero-arrow hero-prev" onclick="moveHeroSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+  <button class="hero-arrow hero-next" onclick="moveHeroSlide(1)"><i class="fas fa-chevron-right"></i></button>
+  <div class="hero-dots">
+    <% featured.slice(0, 4).forEach((_, i) => { %>
+      <span class="hero-dot <%= i === 0 ? 'active' : '' %>" onclick="goToHeroSlide(<%= i %>)"></span>
+    <% }) %>
+  </div>
+</section>
+
+<section class="trust-bar">
   <div class="container">
-    <div class="hero-content">
-      <h1>Shop the <span class="text-gradient">Best Deals</span> Online</h1>
-      <p>Discover thousands of products at unbeatable prices. Free shipping on orders over $50.</p>
-      <div class="hero-actions">
-        <a href="/products" class="btn btn-primary btn-lg"><i class="fas fa-shopping-bag"></i> Shop Now</a>
-        <a href="/register" class="btn btn-outline-light btn-lg"><i class="fas fa-user-plus"></i> Join Free</a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat"><span class="stat-number">10K+</span><span class="stat-label">Products</span></div>
-        <div class="stat"><span class="stat-number">50K+</span><span class="stat-label">Customers</span></div>
-        <div class="stat"><span class="stat-number">99%</span><span class="stat-label">Satisfaction</span></div>
-      </div>
+    <div class="trust-items">
+      <div class="trust-item"><i class="fas fa-truck"></i><span>Free Shipping</span></div>
+      <div class="trust-item"><i class="fas fa-shield-alt"></i><span>Secure Payment</span></div>
+      <div class="trust-item"><i class="fas fa-undo"></i><span>30-Day Returns</span></div>
+      <div class="trust-item"><i class="fas fa-headset"></i><span>24/7 Support</span></div>
     </div>
   </div>
 </section>
 
-<section class="categories-section">
+<section class="categories-section reveal">
   <div class="container">
     <h2 class="section-title"><i class="fas fa-th-large"></i> Shop by Category</h2>
     <div class="categories-grid">
-      <% categories.forEach(cat => { %>
-        <a href="/products?category=<%= cat.slug %>" class="category-card">
-          <span class="category-icon"><%= cat.icon %></span>
+      <% categories.forEach((cat, idx) => { %>
+        <a href="/products?category=<%= cat.slug %>" class="category-card reveal reveal-delay-<%= (idx % 4) + 1 %>">
+          <span class="category-icon"><i class="<%= cat.icon %>"></i></span>
           <span class="category-name"><%= cat.name %></span>
         </a>
       <% }) %>
@@ -32,12 +53,22 @@
   </div>
 </section>
 
-<section class="products-section">
+<% if (featured.length > 0) { %>
+<section class="deals-section">
   <div class="container">
-    <h2 class="section-title"><i class="fas fa-fire"></i> Featured Products</h2>
+    <div class="deals-header">
+      <h2 class="section-title"><i class="fas fa-bolt"></i> Lightning Deals</h2>
+      <div class="countdown" id="deal-countdown">
+        <div class="countdown-item"><span class="countdown-num" id="cd-hours">08</span><span class="countdown-label">HRS</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-item"><span class="countdown-num" id="cd-mins">45</span><span class="countdown-label">MIN</span></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-item"><span class="countdown-num" id="cd-secs">30</span><span class="countdown-label">SEC</span></div>
+      </div>
+    </div>
     <div class="products-grid">
-      <% featured.forEach(product => { %>
-        <div class="product-card">
+      <% featured.slice(0, 4).forEach(product => { %>
+        <div class="product-card deal-card">
           <a href="/product/<%= product.slug %>" class="product-image-wrap">
             <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy">
             <% if (product.original_price && product.original_price > product.price) { %>
@@ -45,7 +76,47 @@
                 -<%= Math.round((1 - product.price / product.original_price) * 100) %>%
               </span>
             <% } %>
+            <button class="wishlist-toggle product-wishlist" data-product-id="<%= product.id %>">
+              <i class="far fa-heart"></i>
+            </button>
           </a>
+          <div class="product-info">
+            <a href="/product/<%= product.slug %>" class="product-name"><%= product.name %></a>
+            <div class="product-price">
+              <span class="current-price">$<%= parseFloat(product.price).toFixed(2) %></span>
+              <% if (product.original_price) { %>
+                <span class="original-price">$<%= parseFloat(product.original_price).toFixed(2) %></span>
+              <% } %>
+            </div>
+            <div class="deal-progress">
+              <div class="deal-progress-bar"><div class="deal-progress-fill" style="width: <%= Math.min(95, Math.round(product.sold / (product.stock + product.sold) * 100)) %>%"></div></div>
+              <span class="deal-sold"><%= Math.round(product.sold / (product.stock + product.sold) * 100) %>% sold</span>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<section class="products-section reveal">
+  <div class="container">
+    <h2 class="section-title"><i class="fas fa-fire"></i> Featured Products</h2>
+    <div class="products-grid">
+      <% featured.forEach((product, idx) => { %>
+        <div class="product-card reveal reveal-delay-<%= (idx % 4) + 1 %>">
+          <a href="/product/<%= product.slug %>" class="product-image-wrap">
+            <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy">
+            <% if (product.original_price && product.original_price > product.price) { %>
+              <span class="discount-badge">-<%= Math.round((1 - product.price / product.original_price) * 100) %>%</span>
+            <% } %>
+            <button class="wishlist-toggle product-wishlist" data-product-id="<%= product.id %>"><i class="far fa-heart"></i></button>
+          </a>
+          <div class="card-hover-actions">
+            <a href="/product/<%= product.slug %>" class="btn btn-outline"><i class="fas fa-eye"></i> View</a>
+            <button class="btn btn-primary card-quick-add" data-product-id="<%= product.id %>"><i class="fas fa-cart-plus"></i> Add</button>
+          </div>
           <div class="product-info">
             <span class="product-category"><%= product.category_name %></span>
             <a href="/product/<%= product.slug %>" class="product-name"><%= product.name %></a>
@@ -72,20 +143,30 @@
   </div>
 </section>
 
-<section class="products-section section-dark">
+<section class="recently-viewed-section" id="recently-viewed-section" style="display:none;">
+  <div class="container">
+    <h2 class="section-title"><i class="fas fa-history"></i> Recently Viewed</h2>
+    <div class="products-grid" id="recently-viewed-grid"></div>
+  </div>
+</section>
+
+<section class="products-section section-dark reveal">
   <div class="container">
     <h2 class="section-title"><i class="fas fa-star"></i> Most Popular</h2>
     <div class="products-grid">
-      <% popular.forEach(product => { %>
-        <div class="product-card">
+      <% popular.forEach((product, idx) => { %>
+        <div class="product-card reveal reveal-delay-<%= (idx % 4) + 1 %>">
           <a href="/product/<%= product.slug %>" class="product-image-wrap">
             <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy">
             <% if (product.original_price && product.original_price > product.price) { %>
-              <span class="discount-badge">
-                -<%= Math.round((1 - product.price / product.original_price) * 100) %>%
-              </span>
+              <span class="discount-badge">-<%= Math.round((1 - product.price / product.original_price) * 100) %>%</span>
             <% } %>
+            <button class="wishlist-toggle product-wishlist" data-product-id="<%= product.id %>"><i class="far fa-heart"></i></button>
           </a>
+          <div class="card-hover-actions">
+            <a href="/product/<%= product.slug %>" class="btn btn-outline"><i class="fas fa-eye"></i> View</a>
+            <button class="btn btn-primary card-quick-add" data-product-id="<%= product.id %>"><i class="fas fa-cart-plus"></i> Add</button>
+          </div>
           <div class="product-info">
             <span class="product-category"><%= product.category_name %></span>
             <a href="/product/<%= product.slug %>" class="product-name"><%= product.name %></a>
@@ -109,7 +190,7 @@
   </div>
 </section>
 
-<section class="cta-section">
+<section class="cta-section reveal">
   <div class="container">
     <div class="cta-content">
       <h2>Start Shopping Today</h2>
@@ -118,5 +199,68 @@
     </div>
   </div>
 </section>
+
+<script>
+// Hero carousel
+let heroIndex = 0;
+const heroSlides = document.querySelectorAll('.hero-slide');
+const heroDots = document.querySelectorAll('.hero-dot');
+
+function showHeroSlide(n) {
+  heroSlides.forEach(s => s.classList.remove('active'));
+  heroDots.forEach(d => d.classList.remove('active'));
+  heroIndex = (n + heroSlides.length) % heroSlides.length;
+  heroSlides[heroIndex].classList.add('active');
+  heroDots[heroIndex].classList.add('active');
+}
+function moveHeroSlide(d) { showHeroSlide(heroIndex + d); }
+function goToHeroSlide(n) { showHeroSlide(n); }
+if (heroSlides.length > 1) {
+  setInterval(() => moveHeroSlide(1), 5000);
+}
+
+// Lightning deals countdown
+function startCountdown() {
+  const now = new Date();
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+  function update() {
+    const diff = Math.max(0, Math.floor((end - new Date()) / 1000));
+    const h = Math.floor(diff / 3600);
+    const m = Math.floor((diff % 3600) / 60);
+    const s = diff % 60;
+    document.getElementById('cd-hours').textContent = String(h).padStart(2, '0');
+    document.getElementById('cd-mins').textContent = String(m).padStart(2, '0');
+    document.getElementById('cd-secs').textContent = String(s).padStart(2, '0');
+  }
+  update();
+  setInterval(update, 1000);
+}
+startCountdown();
+
+// Recently viewed
+(function() {
+  const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+  if (viewed.length === 0) return;
+  const section = document.getElementById('recently-viewed-section');
+  const grid = document.getElementById('recently-viewed-grid');
+  section.style.display = 'block';
+  grid.innerHTML = viewed.slice(0, 8).map(p => `
+    <div class="product-card">
+      <a href="/product/${p.slug}" class="product-image-wrap">
+        <img src="${p.image}" alt="${p.name}" loading="lazy">
+        ${p.discount ? `<span class="discount-badge">-${p.discount}%</span>` : ''}
+      </a>
+      <div class="product-info">
+        <a href="/product/${p.slug}" class="product-name">${p.name}</a>
+        <div class="product-price">
+          <span class="current-price">$${parseFloat(p.price).toFixed(2)}</span>
+          ${p.original_price ? `<span class="original-price">$${parseFloat(p.original_price).toFixed(2)}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+})();
+</script>
 
 <%- include('partials/footer') %>

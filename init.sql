@@ -113,14 +113,14 @@ CREATE TABLE IF NOT EXISTS wishlist (
 
 -- Insert categories
 INSERT INTO categories (name, slug, icon, description) VALUES
-('Electronics', 'electronics', '📱', 'Smartphones, tablets, gadgets and more'),
-('Fashion', 'fashion', '👕', 'Clothing, shoes and accessories'),
-('Home & Garden', 'home-garden', '🏠', 'Furniture, decor and garden supplies'),
-('Beauty', 'beauty', '💄', 'Skincare, makeup and beauty tools'),
-('Sports', 'sports', '⚽', 'Sports equipment and activewear'),
-('Toys & Games', 'toys-games', '🎮', 'Toys, games and entertainment'),
-('Automotive', 'automotive', '🚗', 'Car accessories and parts'),
-('Books', 'books', '📚', 'Books, magazines and stationery')
+('Electronics', 'electronics', 'fas fa-microchip', 'Smartphones, tablets, gadgets and more'),
+('Fashion', 'fashion', 'fas fa-tshirt', 'Clothing, shoes and accessories'),
+('Home & Garden', 'home-garden', 'fas fa-home', 'Furniture, decor and garden supplies'),
+('Beauty', 'beauty', 'fas fa-spa', 'Skincare, makeup and beauty tools'),
+('Sports', 'sports', 'fas fa-running', 'Sports equipment and activewear'),
+('Toys & Games', 'toys-games', 'fas fa-gamepad', 'Toys, games and entertainment'),
+('Automotive', 'automotive', 'fas fa-car', 'Car accessories and parts'),
+('Books', 'books', 'fas fa-book', 'Books, magazines and stationery')
 ON CONFLICT (slug) DO NOTHING;
 
 -- Insert sample products
