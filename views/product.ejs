@@ -12,7 +12,13 @@
 
     <div class="product-detail">
       <div class="product-gallery">
-        <img src="<%= product.image %>" alt="<%= product.name %>" class="main-image">
+        <div class="gallery-main">
+          <img src="<%= product.image %>" alt="<%= product.name %>" class="gallery-main-img">
+          <button class="gallery-lightbox-btn" type="button"><i class="fas fa-expand"></i></button>
+        </div>
+        <div class="gallery-thumbs">
+          <img src="<%= product.image %>" alt="<%= product.name %>" class="gallery-thumb active" data-full="<%= product.image %>">
+        </div>
       </div>
 
       <div class="product-detail-info">
@@ -54,17 +60,19 @@
 
         <% if (product.stock > 0) { %>
           <div class="product-actions">
-            <form action="/cart/add" method="POST" class="add-to-cart-form">
-              <input type="hidden" name="product_id" value="<%= product.id %>">
+            <div class="add-to-cart-form">
               <div class="quantity-selector">
                 <button type="button" class="qty-btn" onclick="updateQty(-1)">-</button>
                 <input type="number" name="quantity" value="1" min="1" max="<%= product.stock %>" id="qty-input">
                 <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
               </div>
-              <button type="submit" class="btn btn-outline btn-lg">
+              <button type="button" class="btn btn-outline btn-lg ajax-add-to-cart" data-product-id="<%= product.id %>" data-quantity="1">
                 <i class="fas fa-shopping-cart"></i> Add to Cart
               </button>
-            </form>
+            </div>
+            <button type="button" class="wishlist-toggle btn btn-outline btn-lg <%= inWishlist ? 'active' : '' %>" data-product-id="<%= product.id %>">
+              <i class="<%= inWishlist ? 'fas' : 'far' %> fa-heart"></i>
+            </button>
             <form action="/cart/buy-now" method="POST" class="buy-now-form">
               <input type="hidden" name="product_id" value="<%= product.id %>">
               <input type="hidden" name="quantity" value="1" id="buy-now-qty">
@@ -90,6 +98,9 @@
                 <% if (p.original_price && p.original_price > p.price) { %>
                   <span class="discount-badge">-<%= Math.round((1 - p.price / p.original_price) * 100) %>%</span>
                 <% } %>
+                <button class="wishlist-toggle product-wishlist" data-product-id="<%= p.id %>">
+                  <i class="far fa-heart"></i>
+                </button>
               </a>
               <div class="product-info">
                 <span class="product-category"><%= p.category_name %></span>
@@ -116,6 +127,7 @@ function updateQty(change) {
   if (newVal >= 1 && newVal <= parseInt(input.max)) {
     input.value = newVal;
     document.getElementById('buy-now-qty').value = newVal;
+    document.querySelector('.ajax-add-to-cart').dataset.quantity = newVal;
   }
 }
 </script>

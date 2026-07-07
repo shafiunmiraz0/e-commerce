@@ -15,14 +15,18 @@
         <span class="logo-text">Shop<span class="logo-highlight">Vue</span></span>
       </a>
 
-      <form class="search-bar" action="/products" method="GET">
+      <form class="search-bar" action="/products" method="GET" autocomplete="off">
         <input type="text" name="search" placeholder="Search for products..." value="<%= typeof currentSearch !== 'undefined' ? currentSearch : '' %>">
         <button type="submit"><i class="fas fa-search"></i></button>
+        <div class="search-autocomplete"></div>
       </form>
 
       <div class="nav-links">
         <a href="/products"><i class="fas fa-th-large"></i> Products</a>
         <% if (user) { %>
+          <a href="/wishlist" class="wishlist-link">
+            <i class="fas fa-heart"></i> Wishlist
+          </a>
           <a href="/cart" class="cart-link">
             <i class="fas fa-shopping-cart"></i> Cart
           </a>
@@ -57,20 +61,20 @@
 
   <main>
     <div class="container">
-      <% if (success && success.length > 0) { %>
-        <div class="alert alert-success">
+      <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+        <div class="alert alert-success" data-flash>
           <i class="fas fa-check-circle"></i> <%= success %>
           <button onclick="this.parentElement.remove()" class="alert-close">&times;</button>
         </div>
       <% } %>
-      <% if (error && error.length > 0) { %>
-        <div class="alert alert-error">
+      <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+        <div class="alert alert-error" data-flash>
           <i class="fas fa-exclamation-circle"></i> <%= error %>
           <button onclick="this.parentElement.remove()" class="alert-close">&times;</button>
         </div>
       <% } %>
       <% if (typeof info !== 'undefined' && info && info.length > 0) { %>
-        <div class="alert alert-info">
+        <div class="alert alert-info" data-flash>
           <i class="fas fa-info-circle"></i> <%= info %>
           <button onclick="this.parentElement.remove()" class="alert-close">&times;</button>
         </div>

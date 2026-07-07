@@ -15,7 +15,7 @@
       <div class="cart-layout">
         <div class="cart-items">
           <% cartItems.forEach(item => { %>
-            <div class="cart-item">
+            <div class="cart-item" data-cart-id="<%= item.id %>">
               <a href="/product/<%= item.slug %>">
                 <img src="<%= item.image %>" alt="<%= item.name %>">
               </a>
@@ -27,17 +27,15 @@
                 </span>
               </div>
               <div class="cart-item-actions">
-                <form action="/cart/update" method="POST" class="quantity-selector">
-                  <input type="hidden" name="cart_id" value="<%= item.id %>">
-                  <button type="submit" name="quantity" value="<%= item.quantity - 1 %>" class="qty-btn">-</button>
+                <div class="quantity-selector" data-cart-id="<%= item.id %>" data-price="<%= item.price %>">
+                  <button type="button" class="qty-btn ajax-qty-btn" data-change="-1">-</button>
                   <span class="qty-display"><%= item.quantity %></span>
-                  <button type="submit" name="quantity" value="<%= item.quantity + 1 %>" class="qty-btn">+</button>
-                </form>
+                  <button type="button" class="qty-btn ajax-qty-btn" data-change="1">+</button>
+                </div>
                 <span class="cart-item-total">$<%= (parseFloat(item.price) * item.quantity).toFixed(2) %></span>
-                <form action="/cart/remove" method="POST">
-                  <input type="hidden" name="cart_id" value="<%= item.id %>">
-                  <button type="submit" class="btn-remove" title="Remove"><i class="fas fa-trash-alt"></i></button>
-                </form>
+                <button type="button" class="btn-remove ajax-remove-btn" data-cart-id="<%= item.id %>" title="Remove">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
               </div>
             </div>
           <% }) %>
@@ -47,7 +45,7 @@
           <h3>Order Summary</h3>
           <div class="summary-row">
             <span>Subtotal (<%= cartItems.reduce((a, b) => a + b.quantity, 0) %> items)</span>
-            <span>$<%= total.toFixed(2) %></span>
+            <span class="summary-subtotal">$<%= total.toFixed(2) %></span>
           </div>
           <div class="summary-row">
             <span>Shipping</span>
@@ -56,7 +54,7 @@
           <hr>
           <div class="summary-row summary-total">
             <span>Total</span>
-            <span>$<%= total.toFixed(2) %></span>
+            <span class="summary-total-amount">$<%= total.toFixed(2) %></span>
           </div>
           <a href="/cart/checkout" class="btn btn-primary btn-block btn-lg">
             <i class="fas fa-lock"></i> Proceed to Checkout
@@ -67,5 +65,61 @@
     <% } %>
   </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.ajax-qty-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const selector = btn.closest('.quantity-selector');
+      const cartId = selector.dataset.cartId;
+      const currentQty = parseInt(selector.querySelector('.qty-display').textContent);
+      const change = parseInt(btn.dataset.change);
+      const newQty = currentQty + change;
+
+      if (newQty < 0) return;
+
+      const result = await api.post('/api/cart/update', { cart_id: parseInt(cartId), quantity: newQty });
+
+      if (result.success) {
+        if (newQty === 0) {
+          document.querySelector(`.cart-item[data-cart-id="${cartId}"]`)?.remove();
+        } else {
+          selector.querySelector('.qty-display').textContent = newQty;
+          const price = parseFloat(selector.dataset.price);
+          selector.closest('.cart-item').querySelector('.cart-item-total').textContent = '$' + (price * newQty).toFixed(2);
+        }
+
+        document.querySelector('.summary-subtotal').textContent = '$' + result.total;
+        document.querySelector('.summary-total-amount').textContent = '$' + result.total;
+        updateCartBadge(result.cartCount);
+        showToast(result.message, 'success');
+      } else {
+        showToast(result.message, 'error');
+      }
+    });
+  });
+
+  document.querySelectorAll('.ajax-remove-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const cartId = btn.dataset.cartId;
+      const result = await api.post('/api/cart/remove', { cart_id: parseInt(cartId) });
+
+      if (result.success) {
+        const item = document.querySelector(`.cart-item[data-cart-id="${cartId}"]`);
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(-20px)';
+        setTimeout(() => {
+          item.remove();
+          if (document.querySelectorAll('.cart-item').length === 0) location.reload();
+        }, 300);
+        updateCartBadge(result.cartCount);
+        showToast(result.message, 'success');
+      } else {
+        showToast(result.message, 'error');
+      }
+    });
+  });
+});
+</script>
 
 <%- include('partials/footer') %>

@@ -71,6 +71,9 @@
                   <% if (product.original_price && product.original_price > product.price) { %>
                     <span class="discount-badge">-<%= Math.round((1 - product.price / product.original_price) * 100) %>%</span>
                   <% } %>
+                  <button class="wishlist-toggle product-wishlist" data-product-id="<%= product.id %>">
+                    <i class="far fa-heart"></i>
+                  </button>
                 </a>
                 <div class="product-info">
                   <span class="product-category"><%= product.category_name %></span>

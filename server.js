@@ -51,12 +51,14 @@ const googleAuthRoutes = require('./routes/google-auth');
 const productRoutes = require('./routes/products');
 const cartRoutes = require('./routes/cart');
 const adminRoutes = require('./routes/admin');
+const apiRoutes = require('./routes/api');
 
 app.use('/', productRoutes);
 app.use('/', authRoutes);
 app.use('/', googleAuthRoutes);
 app.use('/cart', cartRoutes);
 app.use('/admin', adminRoutes);
+app.use('/api', apiRoutes);
 
 // 404
 app.use((req, res) => {
