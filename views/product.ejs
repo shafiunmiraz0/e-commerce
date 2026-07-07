@@ -53,17 +53,26 @@
         </div>
 
         <% if (product.stock > 0) { %>
-          <form action="/cart/add" method="POST" class="add-to-cart-form">
-            <input type="hidden" name="product_id" value="<%= product.id %>">
-            <div class="quantity-selector">
-              <button type="button" class="qty-btn" onclick="updateQty(-1)">-</button>
-              <input type="number" name="quantity" value="1" min="1" max="<%= product.stock %>" id="qty-input">
-              <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
-            </div>
-            <button type="submit" class="btn btn-primary btn-lg add-to-cart-btn">
-              <i class="fas fa-shopping-cart"></i> Add to Cart
-            </button>
-          </form>
+          <div class="product-actions">
+            <form action="/cart/add" method="POST" class="add-to-cart-form">
+              <input type="hidden" name="product_id" value="<%= product.id %>">
+              <div class="quantity-selector">
+                <button type="button" class="qty-btn" onclick="updateQty(-1)">-</button>
+                <input type="number" name="quantity" value="1" min="1" max="<%= product.stock %>" id="qty-input">
+                <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
+              </div>
+              <button type="submit" class="btn btn-outline btn-lg">
+                <i class="fas fa-shopping-cart"></i> Add to Cart
+              </button>
+            </form>
+            <form action="/cart/buy-now" method="POST" class="buy-now-form">
+              <input type="hidden" name="product_id" value="<%= product.id %>">
+              <input type="hidden" name="quantity" value="1" id="buy-now-qty">
+              <button type="submit" class="btn btn-primary btn-lg buy-now-btn">
+                <i class="fas fa-bolt"></i> Buy Now
+              </button>
+            </form>
+          </div>
         <% } else { %>
           <button class="btn btn-secondary btn-lg" disabled><i class="fas fa-times"></i> Out of Stock</button>
         <% } %>
@@ -106,6 +115,7 @@ function updateQty(change) {
   const newVal = parseInt(input.value) + change;
   if (newVal >= 1 && newVal <= parseInt(input.max)) {
     input.value = newVal;
+    document.getElementById('buy-now-qty').value = newVal;
   }
 }
 </script>

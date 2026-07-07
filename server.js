@@ -34,6 +34,11 @@ app.use(session({
   cookie: { maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true }
 }));
 
+// Passport (Google OAuth)
+const passport = require('./config/google-auth');
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Flash messages
 app.use(flash());
 
@@ -42,12 +47,14 @@ app.use(setLocals);
 
 // Routes
 const authRoutes = require('./routes/auth');
+const googleAuthRoutes = require('./routes/google-auth');
 const productRoutes = require('./routes/products');
 const cartRoutes = require('./routes/cart');
 const adminRoutes = require('./routes/admin');
 
 app.use('/', productRoutes);
 app.use('/', authRoutes);
+app.use('/', googleAuthRoutes);
 app.use('/cart', cartRoutes);
 app.use('/admin', adminRoutes);
 
@@ -66,4 +73,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🚀 Server running on http://localhost:${PORT}`);
   console.log(`📦 Admin panel: http://localhost:${PORT}/admin`);
   console.log(`👤 Default admin: admin@store.com / admin123\n`);
+  if (process.env.GOOGLE_CLIENT_ID) {
+    console.log(`🔐 Google OAuth: enabled`);
+  } else {
+    console.log(`⚠ Google OAuth: not configured (set GOOGLE_CLIENT_ID in .env)`);
+  }
 });

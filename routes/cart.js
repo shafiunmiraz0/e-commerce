@@ -55,6 +55,42 @@ router.post('/add', isAuthenticated, async (req, res) => {
   }
 });
 
+// Buy Now - add to cart and go to checkout (or redirect to login)
+router.post('/buy-now', async (req, res) => {
+  try {
+    const { product_id, quantity } = req.body;
+    const qty = parseInt(quantity) || 1;
+
+    // If not logged in, store intent and redirect to login
+    if (!req.session.user) {
+      req.session.buyNow = { product_id: parseInt(product_id), quantity: qty };
+      req.flash('info', 'Please sign in or create an account to complete your order');
+      return res.redirect('/login?returnTo=/checkout');
+    }
+
+    const product = await pool.query('SELECT * FROM products WHERE id = $1', [product_id]);
+    if (product.rows.length === 0) {
+      req.flash('error', 'Product not found');
+      return res.redirect('back');
+    }
+
+    if (product.rows[0].stock < qty) {
+      req.flash('error', 'Not enough stock');
+      return res.redirect('back');
+    }
+
+    // Clear existing cart and add just this item
+    await pool.query('DELETE FROM cart WHERE user_id = $1', [req.session.user.id]);
+    await pool.query('INSERT INTO cart (user_id, product_id, quantity) VALUES ($1, $2, $3)', [req.session.user.id, product_id, qty]);
+
+    res.redirect('/cart/checkout');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Failed to process order');
+    res.redirect('back');
+  }
+});
+
 // Update cart quantity
 router.post('/update', isAuthenticated, async (req, res) => {
   try {
@@ -90,6 +126,17 @@ router.post('/remove', isAuthenticated, async (req, res) => {
 // Checkout page
 router.get('/checkout', isAuthenticated, async (req, res) => {
   try {
+    // Process any pending buy-now item
+    if (req.session.buyNow) {
+      const { product_id, quantity } = req.session.buyNow;
+      const product = await pool.query('SELECT * FROM products WHERE id = $1', [product_id]);
+      if (product.rows.length > 0 && product.rows[0].stock >= quantity) {
+        await pool.query('DELETE FROM cart WHERE user_id = $1', [req.session.user.id]);
+        await pool.query('INSERT INTO cart (user_id, product_id, quantity) VALUES ($1, $2, $3)', [req.session.user.id, product_id, quantity]);
+      }
+      delete req.session.buyNow;
+    }
+
     const cartItems = await pool.query(
       `SELECT c.*, p.name, p.price, p.image, p.stock FROM cart c LEFT JOIN products p ON c.product_id = p.id WHERE c.user_id = $1`,
       [req.session.user.id]
@@ -152,7 +199,7 @@ router.post('/place-order', isAuthenticated, async (req, res) => {
     await client.query('COMMIT');
 
     req.flash('success', `Order #${order.id} placed successfully!`);
-    res.redirect('/my-orders');
+    res.redirect('/account/orders');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
@@ -163,24 +210,9 @@ router.post('/place-order', isAuthenticated, async (req, res) => {
   }
 });
 
-// My orders
-router.get('/my-orders', isAuthenticated, async (req, res) => {
-  try {
-    const orders = await pool.query(
-      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
-      [req.session.user.id]
-    );
-
-    for (let order of orders.rows) {
-      const items = await pool.query('SELECT * FROM order_items WHERE order_id = $1', [order.id]);
-      order.items = items.rows;
-    }
-
-    res.render('my-orders', { title: 'My Orders', orders: orders.rows });
-  } catch (err) {
-    console.error(err);
-    res.redirect('/');
-  }
+// My orders (redirect to account panel)
+router.get('/my-orders', isAuthenticated, (req, res) => {
+  res.redirect('/account/orders');
 });
 
 // Cancel order
@@ -189,7 +221,7 @@ router.post('/cancel-order/:id', isAuthenticated, async (req, res) => {
     const order = await pool.query('SELECT * FROM orders WHERE id = $1 AND user_id = $2', [req.params.id, req.session.user.id]);
     if (order.rows.length === 0 || order.rows[0].status !== 'pending') {
       req.flash('error', 'Cannot cancel this order');
-      return res.redirect('/my-orders');
+      return res.redirect('/account/orders');
     }
 
     await pool.query('UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2', ['cancelled', req.params.id]);
@@ -200,10 +232,10 @@ router.post('/cancel-order/:id', isAuthenticated, async (req, res) => {
     }
 
     req.flash('success', 'Order cancelled');
-    res.redirect('/my-orders');
+    res.redirect('/account/orders');
   } catch (err) {
     console.error(err);
-    res.redirect('/my-orders');
+    res.redirect('/account/orders');
   }
 });
 

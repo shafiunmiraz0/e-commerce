@@ -32,5 +32,17 @@
   </footer>
 
   <script src="/js/app.js"></script>
+  <script>
+    function toggleDropdown(e) {
+      e.stopPropagation();
+      const dropdown = e.currentTarget.closest('.dropdown');
+      const isOpen = dropdown.classList.contains('show');
+      document.querySelectorAll('.dropdown.show').forEach(d => d.classList.remove('show'));
+      if (!isOpen) dropdown.classList.add('show');
+    }
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.dropdown.show').forEach(d => d.classList.remove('show'));
+    });
+  </script>
 </body>
 </html>

@@ -1,15 +1,12 @@
--- Create database
-CREATE DATABASE ecommerce_db;
-
--- Connect to it
-\c ecommerce_db;
+-- Database is created by POSTGRES_DB env var in docker-compose
+-- Tables are created in the ecommerce_db database
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(255),
     full_name VARCHAR(200),
     phone VARCHAR(20),
     address TEXT,
@@ -17,6 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
     country VARCHAR(100),
     role VARCHAR(20) DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
     avatar VARCHAR(500),
+    auth_provider VARCHAR(20) DEFAULT 'local',
+    google_id VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

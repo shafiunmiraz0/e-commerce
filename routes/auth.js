@@ -7,19 +7,19 @@ const { isAuthenticated } = require('../middleware/auth');
 // Login page
 router.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
-  res.render('login', { title: 'Login' });
+  res.render('login', { title: 'Login', returnTo: req.query.returnTo || '' });
 });
 
 // Register page
 router.get('/register', (req, res) => {
   if (req.session.user) return res.redirect('/');
-  res.render('register', { title: 'Register' });
+  res.render('register', { title: 'Register', returnTo: req.query.returnTo || '' });
 });
 
 // Register POST
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password, password_confirm, full_name } = req.body;
+    const { username, email, password, password_confirm, full_name, returnTo } = req.body;
 
     if (!username || !email || !password) {
       req.flash('error', 'All fields are required');
@@ -59,6 +59,13 @@ router.post('/register', async (req, res) => {
     };
 
     req.flash('success', 'Account created successfully!');
+
+    // Process pending buy-now item
+    if (req.session.buyNow) {
+      return res.redirect('/checkout');
+    }
+
+    if (returnTo) return res.redirect(returnTo);
     res.redirect('/');
   } catch (err) {
     console.error(err);
@@ -70,7 +77,7 @@ router.post('/register', async (req, res) => {
 // Login POST
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, returnTo } = req.body;
 
     if (!email || !password) {
       req.flash('error', 'All fields are required');
@@ -101,9 +108,13 @@ router.post('/login', async (req, res) => {
 
     req.flash('success', `Welcome back, ${user.full_name || user.username}!`);
 
-    if (user.role === 'admin') {
-      return res.redirect('/admin');
+    // Process pending buy-now item
+    if (req.session.buyNow) {
+      return res.redirect('/checkout');
     }
+
+    if (returnTo) return res.redirect(returnTo);
+    if (user.role === 'admin') return res.redirect('/admin');
     res.redirect('/');
   } catch (err) {
     console.error(err);
@@ -119,15 +130,80 @@ router.get('/logout', (req, res) => {
   });
 });
 
-// Profile page
-router.get('/profile', isAuthenticated, async (req, res) => {
+// Account dashboard
+router.get('/account', isAuthenticated, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.session.user.id]);
     const orders = await pool.query(
-      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10',
+      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
       [req.session.user.id]
     );
-    res.render('profile', { title: 'My Profile', profile: result.rows[0], orders: orders.rows });
+
+    for (let order of orders.rows) {
+      const items = await pool.query('SELECT * FROM order_items WHERE order_id = $1', [order.id]);
+      order.items = items.rows;
+    }
+
+    const orderStats = {
+      total: orders.rows.length,
+      pending: orders.rows.filter(o => o.status === 'pending').length,
+      confirmed: orders.rows.filter(o => o.status === 'confirmed').length,
+      shipped: orders.rows.filter(o => o.status === 'shipped').length,
+      delivered: orders.rows.filter(o => o.status === 'delivered').length,
+      cancelled: orders.rows.filter(o => o.status === 'cancelled').length,
+    };
+
+    res.render('account/dashboard', { title: 'My Account', profile: result.rows[0], orders: orders.rows, orderStats, activeTab: 'overview' });
+  } catch (err) {
+    console.error(err);
+    res.redirect('/');
+  }
+});
+
+// Account orders
+router.get('/account/orders', isAuthenticated, async (req, res) => {
+  try {
+    const { status } = req.query;
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.session.user.id]);
+
+    let ordersQuery = 'SELECT * FROM orders WHERE user_id = $1';
+    const params = [req.session.user.id];
+
+    if (status) {
+      ordersQuery += ' AND status = $2';
+      params.push(status);
+    }
+
+    ordersQuery += ' ORDER BY created_at DESC';
+    const orders = await pool.query(ordersQuery, params);
+
+    for (let order of orders.rows) {
+      const items = await pool.query('SELECT * FROM order_items WHERE order_id = $1', [order.id]);
+      order.items = items.rows;
+    }
+
+    const allOrders = await pool.query('SELECT * FROM orders WHERE user_id = $1', [req.session.user.id]);
+    const orderStats = {
+      total: allOrders.rows.length,
+      pending: allOrders.rows.filter(o => o.status === 'pending').length,
+      confirmed: allOrders.rows.filter(o => o.status === 'confirmed').length,
+      shipped: allOrders.rows.filter(o => o.status === 'shipped').length,
+      delivered: allOrders.rows.filter(o => o.status === 'delivered').length,
+      cancelled: allOrders.rows.filter(o => o.status === 'cancelled').length,
+    };
+
+    res.render('account/orders', { title: 'My Orders', profile: result.rows[0], orders: orders.rows, orderStats, activeTab: 'orders', currentStatus: status || '' });
+  } catch (err) {
+    console.error(err);
+    res.redirect('/');
+  }
+});
+
+// Account profile
+router.get('/account/profile', isAuthenticated, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.session.user.id]);
+    res.render('account/profile', { title: 'My Profile', profile: result.rows[0], activeTab: 'profile' });
   } catch (err) {
     console.error(err);
     res.redirect('/');
@@ -135,7 +211,7 @@ router.get('/profile', isAuthenticated, async (req, res) => {
 });
 
 // Update profile
-router.post('/profile', isAuthenticated, async (req, res) => {
+router.post('/account/profile', isAuthenticated, async (req, res) => {
   try {
     const { full_name, phone, address, city, country } = req.body;
     await pool.query(
@@ -144,11 +220,11 @@ router.post('/profile', isAuthenticated, async (req, res) => {
     );
     req.session.user.full_name = full_name;
     req.flash('success', 'Profile updated!');
-    res.redirect('/profile');
+    res.redirect('/account/profile');
   } catch (err) {
     console.error(err);
     req.flash('error', 'Update failed');
-    res.redirect('/profile');
+    res.redirect('/account/profile');
   }
 });
 

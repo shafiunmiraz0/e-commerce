@@ -1,0 +1,112 @@
+<%- include('../partials/header') %>
+
+<section class="account-page">
+  <div class="container">
+    <div class="account-layout">
+      <aside class="account-sidebar">
+        <div class="account-user">
+          <div class="account-avatar"><i class="fas fa-user-circle"></i></div>
+          <h3><%= profile.full_name || profile.username %></h3>
+          <span><%= profile.email %></span>
+        </div>
+        <nav class="account-nav">
+          <a href="/account" class="account-nav-link <%= activeTab === 'overview' ? 'active' : '' %>"><i class="fas fa-th-large"></i> Overview</a>
+          <a href="/account/orders" class="account-nav-link <%= activeTab === 'orders' ? 'active' : '' %>"><i class="fas fa-box"></i> My Orders</a>
+          <a href="/account/profile" class="account-nav-link <%= activeTab === 'profile' ? 'active' : '' %>"><i class="fas fa-id-card"></i> Profile</a>
+          <hr>
+          <a href="/" class="account-nav-link"><i class="fas fa-store"></i> Back to Store</a>
+          <a href="/logout" class="account-nav-link text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+      </aside>
+
+      <main class="account-main">
+        <h2><i class="fas fa-th-large"></i> Welcome, <%= profile.full_name || profile.username %>!</h2>
+
+        <div class="stats-grid">
+          <div class="stat-card stat-orders">
+            <div class="stat-card-icon"><i class="fas fa-shopping-bag"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-card-label">Total Orders</span>
+              <span class="stat-card-value"><%= orderStats.total %></span>
+            </div>
+          </div>
+          <div class="stat-card stat-pending">
+            <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-card-label">Pending</span>
+              <span class="stat-card-value"><%= orderStats.pending %></span>
+            </div>
+          </div>
+          <div class="stat-card stat-revenue">
+            <div class="stat-card-icon"><i class="fas fa-truck"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-card-label">Shipped</span>
+              <span class="stat-card-value"><%= orderStats.shipped %></span>
+            </div>
+          </div>
+          <div class="stat-card stat-products">
+            <div class="stat-card-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-card-label">Delivered</span>
+              <span class="stat-card-value"><%= orderStats.delivered %></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="account-card">
+          <div class="account-card-header">
+            <h3><i class="fas fa-clock"></i> Recent Orders</h3>
+            <a href="/account/orders" class="btn btn-sm btn-outline">View All</a>
+          </div>
+          <% if (orders.length === 0) { %>
+            <div class="empty-state">
+              <i class="fas fa-box-open fa-2x"></i>
+              <h3>No orders yet</h3>
+              <p>Start shopping to see your orders here!</p>
+              <a href="/products" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Browse Products</a>
+            </div>
+          <% } else { %>
+            <div class="orders-list">
+              <% orders.slice(0, 5).forEach(order => { %>
+                <div class="order-card">
+                  <div class="order-header">
+                    <div class="order-meta">
+                      <span class="order-id">#<%= order.id %></span>
+                      <span class="order-date"><%= new Date(order.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+                    </div>
+                    <span class="order-status status-<%= order.status %>"><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></span>
+                  </div>
+                  <div class="order-items">
+                    <% order.items.forEach(item => { %>
+                      <div class="order-item">
+                        <img src="<%= item.product_image %>" alt="<%= item.product_name %>">
+                        <div class="order-item-info">
+                          <span class="order-item-name"><%= item.product_name %></span>
+                          <span class="order-item-qty">Qty: <%= item.quantity %> x $<%= parseFloat(item.price).toFixed(2) %></span>
+                        </div>
+                        <span class="order-item-total">$<%= (parseFloat(item.price) * item.quantity).toFixed(2) %></span>
+                      </div>
+                    <% }) %>
+                  </div>
+                  <div class="order-footer">
+                    <div class="order-total">
+                      <span>Total:</span>
+                      <strong>$<%= parseFloat(order.total_amount).toFixed(2) %></strong>
+                    </div>
+                    <% if (order.status === 'pending') { %>
+                      <form action="/cart/cancel-order/<%= order.id %>" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Cancel</button>
+                      </form>
+                    <% } %>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

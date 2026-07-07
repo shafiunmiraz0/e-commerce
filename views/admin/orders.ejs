@@ -73,15 +73,48 @@
 
                 <div class="order-footer">
                   <span>Payment: <strong><%= order.payment_method.toUpperCase() %></strong></span>
-                  <form action="/admin/orders/<%= order.id %>/status" method="POST" class="status-form">
-                    <select name="status" onchange="this.form.submit()">
-                      <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
-                      <option value="confirmed" <%= order.status === 'confirmed' ? 'selected' : '' %>>Confirmed</option>
-                      <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
-                      <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                      <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-                    </select>
-                  </form>
+
+                  <div class="order-actions">
+                    <% if (order.status === 'pending') { %>
+                      <form action="/admin/orders/<%= order.id %>/accept" method="POST" style="display:inline">
+                        <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Accept this order?')">
+                          <i class="fas fa-check"></i> Accept
+                        </button>
+                      </form>
+                      <form action="/admin/orders/<%= order.id %>/reject" method="POST" style="display:inline">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Reject this order?')">
+                          <i class="fas fa-times"></i> Reject
+                        </button>
+                      </form>
+                    <% } else if (order.status === 'confirmed') { %>
+                      <form action="/admin/orders/<%= order.id %>/status" method="POST" style="display:inline">
+                        <input type="hidden" name="status" value="shipped">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                          <i class="fas fa-truck"></i> Mark as Shipped
+                        </button>
+                      </form>
+                    <% } else if (order.status === 'shipped') { %>
+                      <form action="/admin/orders/<%= order.id %>/status" method="POST" style="display:inline">
+                        <input type="hidden" name="status" value="delivered">
+                        <button type="submit" class="btn btn-success btn-sm">
+                          <i class="fas fa-check-circle"></i> Mark as Delivered
+                        </button>
+                      </form>
+                    <% } %>
+
+                    <% if (!['cancelled', 'delivered'].includes(order.status)) { %>
+                      <form action="/admin/orders/<%= order.id %>/status" method="POST" style="display:inline">
+                        <select name="status" onchange="this.form.submit()" class="inline-select">
+                          <option value="" disabled selected>Change Status...</option>
+                          <option value="pending">Pending</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                      </form>
+                    <% } %>
+                  </div>
                 </div>
               </div>
             <% }) %>

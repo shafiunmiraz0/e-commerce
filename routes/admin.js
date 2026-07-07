@@ -163,6 +163,40 @@ router.post('/orders/:id/status', isAuthenticated, isAdmin, async (req, res) => 
   }
 });
 
+// Accept order
+router.post('/orders/:id/accept', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    await pool.query("UPDATE orders SET status = 'confirmed', updated_at = NOW() WHERE id = $1", [req.params.id]);
+    req.flash('success', 'Order accepted and confirmed');
+    res.redirect('/admin/orders');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Failed to accept order');
+    res.redirect('/admin/orders');
+  }
+});
+
+// Reject order
+router.post('/orders/:id/reject', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const orderResult = await pool.query('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    if (orderResult.rows.length > 0) {
+      await pool.query("UPDATE orders SET status = 'cancelled', updated_at = NOW() WHERE id = $1", [req.params.id]);
+      // Restore stock
+      const items = await pool.query('SELECT * FROM order_items WHERE order_id = $1', [req.params.id]);
+      for (const item of items.rows) {
+        await pool.query('UPDATE products SET stock = stock + $1, sold = sold - $1 WHERE id = $2', [item.quantity, item.product_id]);
+      }
+    }
+    req.flash('success', 'Order rejected');
+    res.redirect('/admin/orders');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Failed to reject order');
+    res.redirect('/admin/orders');
+  }
+});
+
 // Admin users
 router.get('/users', isAuthenticated, isAdmin, async (req, res) => {
   try {
