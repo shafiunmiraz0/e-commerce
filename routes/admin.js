@@ -239,4 +239,81 @@ router.post('/users/:id/delete', isAuthenticated, isAdmin, async (req, res) => {
   }
 });
 
+// ==================== FILTER SETTINGS ====================
+
+// View filter settings
+router.get('/settings/filters', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const result = await pool.query("SELECT value FROM site_settings WHERE key = 'filter_config'");
+    const settings = result.rows.length > 0 ? result.rows[0].value : {};
+    const categories = await pool.query('SELECT * FROM categories ORDER BY id');
+    res.render('admin/settings-filters', { title: 'Filter Settings', settings, categories: categories.rows });
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Failed to load settings');
+    res.redirect('/admin');
+  }
+});
+
+// Update filter settings
+router.post('/settings/filters', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const {
+      show_category_filter, show_price_filter, show_rating_filter,
+      show_availability_filter, show_sort_filter, max_price_slider,
+      price_ranges, rating_filters, sort_options
+    } = req.body;
+
+    const config = {
+      show_category_filter: show_category_filter === 'on',
+      show_price_filter: show_price_filter === 'on',
+      show_rating_filter: show_rating_filter === 'on',
+      show_availability_filter: show_availability_filter === 'on',
+      show_sort_filter: show_sort_filter === 'on',
+      max_price_slider: parseInt(max_price_slider) || 500,
+      price_ranges: [],
+      rating_filters: [],
+      sort_options: []
+    };
+
+    // Parse price ranges
+    if (price_ranges && Array.isArray(price_ranges)) {
+      config.price_ranges = price_ranges.filter(p => p.label && p.label.trim()).map(p => ({
+        label: p.label.trim(),
+        min: parseFloat(p.min) || 0,
+        max: parseFloat(p.max) || 0
+      }));
+    }
+
+    // Parse rating filters
+    if (rating_filters && Array.isArray(rating_filters)) {
+      config.rating_filters = rating_filters.filter(r => r.label && r.label.trim()).map(r => ({
+        label: r.label.trim(),
+        min_rating: parseFloat(r.min_rating) || 0
+      }));
+    }
+
+    // Parse sort options
+    if (sort_options && Array.isArray(sort_options)) {
+      config.sort_options = sort_options.filter(s => s.label && s.label.trim()).map(s => ({
+        label: s.label.trim(),
+        value: s.value || ''
+      }));
+    }
+
+    await pool.query(
+      `INSERT INTO site_settings (key, value, updated_at) VALUES ('filter_config', $1, NOW())
+       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+      [JSON.stringify(config)]
+    );
+
+    req.flash('success', 'Filter settings updated!');
+    res.redirect('/admin/settings/filters');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Failed to update settings');
+    res.redirect('/admin/settings/filters');
+  }
+});
+
 module.exports = router;

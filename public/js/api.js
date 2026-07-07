@@ -4,6 +4,7 @@ const api = {
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify(data)
       });
       return await res.json();
@@ -15,7 +16,7 @@ const api = {
 
   async get(url) {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { credentials: 'same-origin' });
       return await res.json();
     } catch (err) {
       console.error('API error:', err);

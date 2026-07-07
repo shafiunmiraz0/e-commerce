@@ -137,3 +137,14 @@ INSERT INTO products (name, slug, description, price, original_price, image, cat
 ('Running Shoes Ultra Boost', 'running-shoes-ultra-boost', 'Lightweight running shoes with responsive cushioning and breathable mesh upper. Available in multiple colors.', 34.99, 69.99, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400', 2, 180, 432, 4.6, 289, true),
 ('Stainless Steel Water Bottle', 'stainless-steel-water-bottle', 'Double-wall vacuum insulated bottle. Keeps drinks cold 24h or hot 12h. BPA-free, 750ml capacity.', 9.99, 19.99, 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400', 5, 800, 1234, 4.4, 876, false),
 ('Mechanical Gaming Keyboard', 'mechanical-gaming-keyboard', 'RGB backlit mechanical keyboard with blue switches. Full N-key rollover, programmable macros.', 39.99, 79.99, 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400', 1, 250, 345, 4.7, 234, true);
+
+-- Site settings (dynamic filter config)
+CREATE TABLE IF NOT EXISTS site_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+INSERT INTO site_settings (key, value) VALUES
+('filter_config', '{"price_ranges":[{"label":"Under $25","min":0,"max":25},{"label":"$25 - $50","min":25,"max":50},{"label":"$50 - $100","min":50,"max":100},{"label":"$100 - $200","min":100,"max":200},{"label":"Over $200","min":200,"max":9999}],"rating_filters":[{"label":"4 Stars & Up","min_rating":4},{"label":"3 Stars & Up","min_rating":3},{"label":"2 Stars & Up","min_rating":2}],"sort_options":[{"label":"Newest","value":""},{"label":"Most Popular","value":"popular"},{"label":"Price: Low to High","value":"price_asc"},{"label":"Price: High to Low","value":"price_desc"},{"label":"Top Rated","value":"rating"}],"show_category_filter":true,"show_price_filter":true,"show_rating_filter":true,"show_availability_filter":true,"show_sort_filter":true,"max_price_slider":500}')
+ON CONFLICT (key) DO NOTHING;

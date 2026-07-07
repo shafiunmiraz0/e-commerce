@@ -62,13 +62,13 @@ app.use('/api', apiRoutes);
 
 // 404
 app.use((req, res) => {
-  res.status(404).render('404', { title: 'Page Not Found' });
+  res.status(404).render('404', { title: 'Page Not Found', user: req.session.user || null, cartCount: 0, wishlistCount: 0 });
 });
 
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).render('error', { title: 'Server Error', error: err.message });
+  res.status(500).render('error', { title: 'Server Error', error: err.message, user: req.session.user || null, cartCount: 0, wishlistCount: 0 });
 });
 
 app.listen(PORT, '0.0.0.0', () => {

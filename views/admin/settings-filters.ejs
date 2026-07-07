@@ -1,0 +1,187 @@
+<%- include('partials/header') %>
+
+<section class="admin-page">
+  <div class="container">
+    <div class="admin-header">
+      <h1><i class="fas fa-filter"></i> Filter Settings</h1>
+      <a href="/admin" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    </div>
+
+    <form action="/admin/settings/filters" method="POST" class="settings-form">
+      <div class="settings-grid">
+
+        <!-- Toggle Filters -->
+        <div class="settings-card">
+          <h3><i class="fas fa-eye"></i> Visible Filters</h3>
+          <p class="settings-desc">Choose which filter groups appear on the products page.</p>
+          <div class="settings-toggles">
+            <label class="toggle-row">
+              <input type="checkbox" name="show_category_filter" <%= settings.show_category_filter !== false ? 'checked' : '' %>>
+              <span class="toggle-label">Category Filter</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="show_price_filter" <%= settings.show_price_filter !== false ? 'checked' : '' %>>
+              <span class="toggle-label">Price Range Filter</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="show_rating_filter" <%= settings.show_rating_filter !== false ? 'checked' : '' %>>
+              <span class="toggle-label">Rating Filter</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="show_availability_filter" <%= settings.show_availability_filter !== false ? 'checked' : '' %>>
+              <span class="toggle-label">Availability Filter</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" name="show_sort_filter" <%= settings.show_sort_filter !== false ? 'checked' : '' %>>
+              <span class="toggle-label">Sort Options</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Max Price Slider -->
+        <div class="settings-card">
+          <h3><i class="fas fa-sliders-h"></i> Price Slider</h3>
+          <p class="settings-desc">Set the maximum value for the price range slider.</p>
+          <div class="settings-field">
+            <label>Max Price ($)</label>
+            <input type="number" name="max_price_slider" value="<%= settings.max_price_slider || 500 %>" min="50" max="10000" step="50">
+          </div>
+        </div>
+
+        <!-- Price Ranges -->
+        <div class="settings-card settings-card-full">
+          <h3><i class="fas fa-dollar-sign"></i> Price Range Presets</h3>
+          <p class="settings-desc">Define the preset price range options shown to users.</p>
+          <div class="dynamic-list" id="price-ranges-list">
+            <% const ranges = settings.price_ranges || []; %>
+            <% if (ranges.length === 0) { %>
+              <div class="dynamic-row">
+                <input type="text" name="price_ranges[0][label]" placeholder="Label (e.g. Under $25)">
+                <input type="number" name="price_ranges[0][min]" placeholder="Min" step="0.01">
+                <input type="number" name="price_ranges[0][max]" placeholder="Max" step="0.01">
+                <button type="button" class="btn-icon btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>
+              </div>
+            <% } else { %>
+              <% ranges.forEach((r, i) => { %>
+                <div class="dynamic-row">
+                  <input type="text" name="price_ranges[<%= i %>][label]" value="<%= r.label %>" placeholder="Label">
+                  <input type="number" name="price_ranges[<%= i %>][min]" value="<%= r.min %>" placeholder="Min" step="0.01">
+                  <input type="number" name="price_ranges[<%= i %>][max]" value="<%= r.max %>" placeholder="Max" step="0.01">
+                  <button type="button" class="btn-icon btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="addPriceRange()"><i class="fas fa-plus"></i> Add Price Range</button>
+        </div>
+
+        <!-- Rating Filters -->
+        <div class="settings-card">
+          <h3><i class="fas fa-star"></i> Rating Filters</h3>
+          <p class="settings-desc">Define the rating filter options.</p>
+          <div class="dynamic-list" id="rating-filters-list">
+            <% const ratings = settings.rating_filters || []; %>
+            <% if (ratings.length === 0) { %>
+              <div class="dynamic-row">
+                <input type="text" name="rating_filters[0][label]" placeholder="Label (e.g. 4 Stars & Up)">
+                <input type="number" name="rating_filters[0][min_rating]" placeholder="Min Rating" min="1" max="5" step="0.5">
+                <button type="button" class="btn-icon btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>
+              </div>
+            <% } else { %>
+              <% ratings.forEach((r, i) => { %>
+                <div class="dynamic-row">
+                  <input type="text" name="rating_filters[<%= i %>][label]" value="<%= r.label %>" placeholder="Label">
+                  <input type="number" name="rating_filters[<%= i %>][min_rating]" value="<%= r.min_rating %>" placeholder="Min Rating" min="1" max="5" step="0.5">
+                  <button type="button" class="btn-icon btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="addRatingFilter()"><i class="fas fa-plus"></i> Add Rating Option</button>
+        </div>
+
+        <!-- Sort Options -->
+        <div class="settings-card">
+          <h3><i class="fas fa-sort"></i> Sort Options</h3>
+          <p class="settings-desc">Define the available sort options.</p>
+          <div class="dynamic-list" id="sort-options-list">
+            <% const sorts = settings.sort_options || []; %>
+            <% if (sorts.length === 0) { %>
+              <div class="dynamic-row">
+                <input type="text" name="sort_options[0][label]" placeholder="Label (e.g. Newest)">
+                <input type="text" name="sort_options[0][value]" placeholder="Value (e.g. popular)">
+                <button type="button" class="btn-icon btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>
+              </div>
+            <% } else { %>
+              <% sorts.forEach((s, i) => { %>
+                <div class="dynamic-row">
+                  <input type="text" name="sort_options[<%= i %>][label]" value="<%= s.label %>" placeholder="Label">
+                  <input type="text" name="sort_options[<%= i %>][value]" value="<%= s.value %>" placeholder="Value (empty = newest)">
+                  <button type="button" class="btn-icon btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="addSortOption()"><i class="fas fa-plus"></i> Add Sort Option</button>
+        </div>
+
+      </div>
+
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Save Settings</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+let priceRangeIdx = <%= (settings.price_ranges || []).length || 1 %>;
+let ratingFilterIdx = <%= (settings.rating_filters || []).length || 1 %>;
+let sortOptionIdx = <%= (settings.sort_options || []).length || 1 %>;
+
+function addPriceRange() {
+  const list = document.getElementById('price-ranges-list');
+  const row = document.createElement('div');
+  row.className = 'dynamic-row';
+  row.innerHTML = `
+    <input type="text" name="price_ranges[${priceRangeIdx}][label]" placeholder="Label (e.g. Under $25)">
+    <input type="number" name="price_ranges[${priceRangeIdx}][min]" placeholder="Min" step="0.01">
+    <input type="number" name="price_ranges[${priceRangeIdx}][max]" placeholder="Max" step="0.01">
+    <button type="button" class="btn-icon btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>
+  `;
+  list.appendChild(row);
+  priceRangeIdx++;
+}
+
+function addRatingFilter() {
+  const list = document.getElementById('rating-filters-list');
+  const row = document.createElement('div');
+  row.className = 'dynamic-row';
+  row.innerHTML = `
+    <input type="text" name="rating_filters[${ratingFilterIdx}][label]" placeholder="Label (e.g. 4 Stars & Up)">
+    <input type="number" name="rating_filters[${ratingFilterIdx}][min_rating]" placeholder="Min Rating" min="1" max="5" step="0.5">
+    <button type="button" class="btn-icon btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>
+  `;
+  list.appendChild(row);
+  ratingFilterIdx++;
+}
+
+function addSortOption() {
+  const list = document.getElementById('sort-options-list');
+  const row = document.createElement('div');
+  row.className = 'dynamic-row';
+  row.innerHTML = `
+    <input type="text" name="sort_options[${sortOptionIdx}][label]" placeholder="Label (e.g. Newest)">
+    <input type="text" name="sort_options[${sortOptionIdx}][value]" placeholder="Value (e.g. popular)">
+    <button type="button" class="btn-icon btn-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>
+  `;
+  list.appendChild(row);
+  sortOptionIdx++;
+}
+
+function removeRow(btn) {
+  btn.closest('.dynamic-row').remove();
+}
+</script>
+
+<%- include('partials/footer') %>

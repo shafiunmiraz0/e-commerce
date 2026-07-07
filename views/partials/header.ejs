@@ -43,6 +43,11 @@
           </a>
           <a href="/cart" class="cart-link">
             <i class="fas fa-shopping-cart"></i> Cart
+            <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
+              <span class="cart-badge" id="cart-count"><%= cartCount %></span>
+            <% } else { %>
+              <span class="cart-badge" id="cart-count" style="display:none">0</span>
+            <% } %>
           </a>
           <div class="dropdown">
             <button class="dropdown-btn" onclick="toggleDropdown(event)">

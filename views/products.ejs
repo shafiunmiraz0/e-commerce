@@ -11,14 +11,22 @@
   <div class="container">
     <div class="products-layout">
       <aside class="filter-sidebar">
-        <h3><i class="fas fa-filter"></i> Filters</h3>
+        <div class="filter-sidebar-header">
+          <h3><i class="fas fa-filter"></i> Filters</h3>
+          <a href="/products" class="filter-clear-btn"><i class="fas fa-times"></i> Clear All</a>
+        </div>
 
         <form class="filter-form" action="/products" method="GET" id="filter-form">
           <input type="hidden" name="search" value="<%= currentSearch %>">
-          <input type="hidden" name="sort" value="<%= currentSort %>">
+          <input type="hidden" name="sort" id="filter-sort-value" value="<%= currentSort %>">
+          <input type="hidden" name="min_price" id="filter-min-price" value="<%= currentMinPrice %>">
+          <input type="hidden" name="max_price" id="filter-max-price" value="<%= currentMaxPrice %>">
+          <input type="hidden" name="min_rating" id="filter-min-rating" value="<%= currentMinRating %>">
+          <input type="hidden" name="in_stock" id="filter-in-stock" value="<%= currentInStock %>">
 
+          <% if (filterConfig.show_category_filter !== false) { %>
           <div class="filter-group">
-            <h4>Category</h4>
+            <h4><i class="fas fa-tag"></i> Category</h4>
             <a href="/products?search=<%= currentSearch %>&sort=<%= currentSort %>" class="filter-link <%= !currentCategory ? 'active' : '' %>">All Categories</a>
             <% categories.forEach(cat => { %>
               <a href="/products?category=<%= cat.slug %>&search=<%= currentSearch %>&sort=<%= currentSort %>" class="filter-link <%= currentCategory === cat.slug ? 'active' : '' %>">
@@ -26,25 +34,79 @@
               </a>
             <% }) %>
           </div>
+          <% } %>
 
+          <% if (filterConfig.show_price_filter !== false) { %>
           <div class="filter-group">
-            <h4>Price Range</h4>
+            <h4><i class="fas fa-dollar-sign"></i> Price Range</h4>
+            <div class="price-range-slider" id="price-range-slider">
+              <div class="price-range-track" id="price-range-track"></div>
+              <input type="range" id="price-min-slider" min="0" max="<%= filterConfig.max_price_slider || 500 %>" value="<%= currentMinPrice || 0 %>" step="5">
+              <input type="range" id="price-max-slider" min="0" max="<%= filterConfig.max_price_slider || 500 %>" value="<%= currentMaxPrice || (filterConfig.max_price_slider || 500) %>" step="5">
+            </div>
+            <div class="price-range-values">
+              <span id="price-min-val">$<%= currentMinPrice || 0 %></span>
+              <span id="price-max-val">$<%= currentMaxPrice || (filterConfig.max_price_slider || 500) %></span>
+            </div>
+            <% if (filterConfig.price_ranges && filterConfig.price_ranges.length > 0) { %>
+            <div class="price-presets">
+              <% filterConfig.price_ranges.forEach(r => { %>
+                <button type="button" class="price-preset-btn" onclick="setPricePreset(<%= r.min %>, <%= r.max %>)"><%= r.label %></button>
+              <% }) %>
+            </div>
+            <% } %>
             <div class="price-range-inputs">
-              <input type="number" name="min_price" placeholder="Min" min="0" step="0.01" value="<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>" class="price-input">
+              <input type="number" id="price-min-input" placeholder="Min" min="0" step="1" value="<%= currentMinPrice %>" class="price-input">
               <span class="price-sep">-</span>
-              <input type="number" name="max_price" placeholder="Max" min="0" step="0.01" value="<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="price-input">
+              <input type="number" id="price-max-input" placeholder="Max" min="0" step="1" value="<%= currentMaxPrice %>" class="price-input">
               <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-check"></i></button>
             </div>
           </div>
+          <% } %>
 
+          <% if (filterConfig.show_rating_filter !== false && filterConfig.rating_filters) { %>
           <div class="filter-group">
-            <h4>Sort By</h4>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= !currentSort ? 'active' : '' %>">Newest</a>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=popular&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= currentSort === 'popular' ? 'active' : '' %>">Most Popular</a>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=price_asc&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= currentSort === 'price_asc' ? 'active' : '' %>">Price: Low to High</a>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=price_desc&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= currentSort === 'price_desc' ? 'active' : '' %>">Price: High to Low</a>
-            <a href="/products?category=<%= currentCategory %>&search=<%= currentSearch %>&sort=rating&min_price=<%= typeof currentMinPrice !== 'undefined' ? currentMinPrice : '' %>&max_price=<%= typeof currentMaxPrice !== 'undefined' ? currentMaxPrice : '' %>" class="filter-link <%= currentSort === 'rating' ? 'active' : '' %>">Top Rated</a>
+            <h4><i class="fas fa-star"></i> Rating</h4>
+            <div class="filter-rating-option <%= !currentMinRating ? 'active' : '' %>" onclick="setRatingFilter('')">
+              <span class="rating-text">All Ratings</span>
+            </div>
+            <% filterConfig.rating_filters.forEach(r => { %>
+              <div class="filter-rating-option <%= currentMinRating == r.min_rating ? 'active' : '' %>" onclick="setRatingFilter('<%= r.min_rating %>')">
+                <span class="stars">
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <i class="fas fa-star<%= i <= r.min_rating ? '' : '-empty' %>"></i>
+                  <% } %>
+                </span>
+                <span class="rating-text"><%= r.label %></span>
+              </div>
+            <% }) %>
           </div>
+          <% } %>
+
+          <% if (filterConfig.show_availability_filter !== false) { %>
+          <div class="filter-group">
+            <h4><i class="fas fa-box-open"></i> Availability</h4>
+            <div class="filter-check-group">
+              <div class="filter-check-item">
+                <input type="checkbox" id="filter-stock-all" <%= !currentInStock ? 'checked' : '' %> onchange="setStockFilter('')">
+                <label for="filter-stock-all">All Items</label>
+              </div>
+              <div class="filter-check-item">
+                <input type="checkbox" id="filter-stock-in" <%= currentInStock === 'true' ? 'checked' : '' %> onchange="setStockFilter('true')">
+                <label for="filter-stock-in">In Stock Only</label>
+              </div>
+            </div>
+          </div>
+          <% } %>
+
+          <% if (filterConfig.show_sort_filter !== false && filterConfig.sort_options) { %>
+          <div class="filter-group">
+            <h4><i class="fas fa-sort"></i> Sort By</h4>
+            <% filterConfig.sort_options.forEach(s => { %>
+              <a href="#" class="filter-link <%= currentSort === s.value ? 'active' : '' %>" onclick="setSortFilter('<%= s.value %>'); return false;"><%= s.label %></a>
+            <% }) %>
+          </div>
+          <% } %>
         </form>
       </aside>
 
@@ -168,6 +230,89 @@ function setView(view) {
 const savedView = localStorage.getItem('productView');
 if (savedView) setView(savedView);
 
+// Price range slider
+(function() {
+  const minSlider = document.getElementById('price-min-slider');
+  const maxSlider = document.getElementById('price-max-slider');
+  const minInput = document.getElementById('price-min-input');
+  const maxInput = document.getElementById('price-max-input');
+  const minVal = document.getElementById('price-min-val');
+  const maxVal = document.getElementById('price-max-val');
+  const track = document.getElementById('price-range-track');
+  const filterMin = document.getElementById('filter-min-price');
+  const filterMax = document.getElementById('filter-max-price');
+
+  if (!minSlider || !maxSlider) return;
+
+  function updateTrack() {
+    const min = parseInt(minSlider.value);
+    const max = parseInt(maxSlider.value);
+    const range = 500;
+    const left = (min / range) * 100;
+    const right = 100 - (max / range) * 100;
+    track.style.left = left + '%';
+    track.style.right = right + '%';
+  }
+
+  function syncFromSliders() {
+    let min = parseInt(minSlider.value);
+    let max = parseInt(maxSlider.value);
+    if (min > max) { const tmp = min; min = max; max = tmp; }
+    minVal.textContent = '$' + min;
+    maxVal.textContent = '$' + max;
+    minInput.value = min || '';
+    maxInput.value = max < 500 ? max : '';
+    filterMin.value = min || '';
+    filterMax.value = max < 500 ? max : '';
+    updateTrack();
+  }
+
+  function syncFromInputs() {
+    let min = parseInt(minInput.value) || 0;
+    let max = parseInt(maxInput.value) || 500;
+    if (min > max) { const tmp = min; min = max; max = tmp; }
+    minSlider.value = min;
+    maxSlider.value = max;
+    minVal.textContent = '$' + min;
+    maxVal.textContent = '$' + max;
+    filterMin.value = min || '';
+    filterMax.value = max < 500 ? max : '';
+    updateTrack();
+  }
+
+  minSlider.addEventListener('input', syncFromSliders);
+  maxSlider.addEventListener('input', syncFromSliders);
+  minInput.addEventListener('change', syncFromInputs);
+  maxInput.addEventListener('change', syncFromInputs);
+
+  updateTrack();
+})();
+
+// Rating filter
+function setRatingFilter(val) {
+  document.getElementById('filter-min-rating').value = val;
+  document.getElementById('filter-form').submit();
+}
+
+// Stock filter
+function setStockFilter(val) {
+  document.getElementById('filter-in-stock').value = val;
+  document.getElementById('filter-form').submit();
+}
+
+// Sort filter
+function setSortFilter(val) {
+  document.getElementById('filter-sort-value').value = val;
+  document.getElementById('filter-form').submit();
+}
+
+// Price preset
+function setPricePreset(min, max) {
+  document.getElementById('filter-min-price').value = min || '';
+  document.getElementById('filter-max-price').value = max || '';
+  document.getElementById('filter-form').submit();
+}
+
 // Load More
 document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('load-more-btn');
@@ -190,6 +335,10 @@ document.addEventListener('DOMContentLoaded', () => {
               ${discount > 0 ? `<span class="discount-badge">-${discount}%</span>` : ''}
               <button class="wishlist-toggle product-wishlist" data-product-id="${p.id}"><i class="far fa-heart"></i></button>
             </a>
+            <div class="card-hover-actions">
+              <a href="/product/${p.slug}" class="btn btn-outline"><i class="fas fa-eye"></i> View</a>
+              <button class="btn btn-primary card-quick-add" data-product-id="${p.id}"><i class="fas fa-cart-plus"></i> Add</button>
+            </div>
             <div class="product-info">
               <span class="product-category">${p.category_name || ''}</span>
               <a href="/product/${p.slug}" class="product-name">${p.name}</a>

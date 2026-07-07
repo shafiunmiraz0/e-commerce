@@ -99,7 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/cart/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: parseInt(productId), quantity: 1 })
+        credentials: 'same-origin',
+        body: JSON.stringify({ product_id: parseInt(productId), quantity: 1 })
       });
       const data = await res.json();
       if (data.success) {

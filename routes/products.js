@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
 // Product listing page
 router.get('/products', async (req, res) => {
   try {
-    const { category, search, sort, page, min_price, max_price } = req.query;
+    const { category, search, sort, page, min_price, max_price, min_rating, in_stock } = req.query;
     const limit = 12;
     const offset = ((parseInt(page) || 1) - 1) * limit;
 
@@ -61,6 +61,15 @@ router.get('/products', async (req, res) => {
       params.push(parseFloat(max_price));
     }
 
+    if (min_rating) {
+      whereClause += ` AND p.rating >= $${paramIndex++}`;
+      params.push(parseFloat(min_rating));
+    }
+
+    if (in_stock === 'true') {
+      whereClause += ` AND p.stock > 0`;
+    }
+
     let orderClause = 'ORDER BY p.created_at DESC';
     if (sort === 'price_asc') orderClause = 'ORDER BY p.price ASC';
     else if (sort === 'price_desc') orderClause = 'ORDER BY p.price DESC';
@@ -80,6 +89,40 @@ router.get('/products', async (req, res) => {
     const categories = await pool.query('SELECT * FROM categories ORDER BY id');
     const totalPages = Math.ceil(parseInt(countResult.rows[0].count) / limit);
 
+    // Load dynamic filter settings
+    let filterConfig = {};
+    try {
+      const settingsResult = await pool.query("SELECT value FROM site_settings WHERE key = 'filter_config'");
+      if (settingsResult.rows.length > 0) filterConfig = settingsResult.rows[0].value;
+    } catch (e) { /* use defaults */ }
+
+    // Defaults if not configured
+    if (!filterConfig.price_ranges || filterConfig.price_ranges.length === 0) {
+      filterConfig.price_ranges = [
+        { label: 'Under $25', min: 0, max: 25 },
+        { label: '$25 - $50', min: 25, max: 50 },
+        { label: '$50 - $100', min: 50, max: 100 },
+        { label: '$100 - $200', min: 100, max: 200 },
+        { label: 'Over $200', min: 200, max: 9999 }
+      ];
+    }
+    if (!filterConfig.rating_filters || filterConfig.rating_filters.length === 0) {
+      filterConfig.rating_filters = [
+        { label: '4 Stars & Up', min_rating: 4 },
+        { label: '3 Stars & Up', min_rating: 3 },
+        { label: '2 Stars & Up', min_rating: 2 }
+      ];
+    }
+    if (!filterConfig.sort_options || filterConfig.sort_options.length === 0) {
+      filterConfig.sort_options = [
+        { label: 'Newest', value: '' },
+        { label: 'Most Popular', value: 'popular' },
+        { label: 'Price: Low to High', value: 'price_asc' },
+        { label: 'Price: High to Low', value: 'price_desc' },
+        { label: 'Top Rated', value: 'rating' }
+      ];
+    }
+
     res.render('products', {
       title: search ? `Search: ${search}` : 'All Products',
       products: products.rows,
@@ -89,13 +132,16 @@ router.get('/products', async (req, res) => {
       currentSort: sort || '',
       currentMinPrice: min_price || '',
       currentMaxPrice: max_price || '',
+      currentMinRating: min_rating || '',
+      currentInStock: in_stock || '',
       currentPage: parseInt(page) || 1,
       totalPages,
-      totalProducts: parseInt(countResult.rows[0].count)
+      totalProducts: parseInt(countResult.rows[0].count),
+      filterConfig
     });
   } catch (err) {
     console.error(err);
-    res.render('products', { title: 'Products', products: [], categories: [], currentCategory: '', currentSearch: '', currentSort: '', currentMinPrice: '', currentMaxPrice: '', currentPage: 1, totalPages: 0, totalProducts: 0 });
+    res.render('products', { title: 'Products', products: [], categories: [], currentCategory: '', currentSearch: '', currentSort: '', currentMinPrice: '', currentMaxPrice: '', currentMinRating: '', currentInStock: '', currentPage: 1, totalPages: 0, totalProducts: 0, filterConfig: {} });
   }
 });
 
