@@ -79,14 +79,22 @@
           <span>Subtotal</span>
           <span>$<%= total.toFixed(2) %></span>
         </div>
+        <div class="coupon-input-wrap">
+          <input type="text" placeholder="Coupon code" class="coupon-input" id="checkout-coupon">
+          <button type="button" class="btn btn-sm btn-outline coupon-btn" onclick="applyCoupon('checkout')">Apply</button>
+        </div>
         <div class="summary-row">
           <span>Shipping</span>
           <span class="text-success">FREE</span>
         </div>
+        <div class="summary-row" id="coupon-discount" style="display:none; color: var(--success);">
+          <span>Coupon Discount</span>
+          <span class="coupon-discount-amount">-$0.00</span>
+        </div>
         <hr>
         <div class="summary-row summary-total">
           <span>Total</span>
-          <span>$<%= total.toFixed(2) %></span>
+          <span class="checkout-total-amount">$<%= total.toFixed(2) %></span>
         </div>
         <button type="submit" class="btn btn-primary btn-block btn-lg">
           <i class="fas fa-check"></i> Place Order

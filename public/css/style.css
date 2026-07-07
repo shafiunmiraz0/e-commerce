@@ -35,7 +35,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
   color: var(--text);
   background: var(--gray-lighter);
   line-height: 1.6;
@@ -2071,4 +2071,176 @@ img { max-width: 100%; display: block; }
   #toast-container { top: auto; bottom: 20px; right: 10px; left: 10px; }
   .toast { min-width: auto; max-width: 100%; }
   .search-autocomplete { max-height: 300px; }
+  .announcement-bar { display: none; }
+}
+
+/* ==================== ANNOUNCEMENT BAR ==================== */
+.announcement-bar {
+  background: var(--dark);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 8px 0;
+  text-align: center;
+}
+
+.announcement-slider {
+  position: relative;
+  height: 20px;
+  overflow: hidden;
+}
+
+.announcement-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.4s ease;
+}
+
+.announcement-item.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.announcement-item i {
+  color: var(--accent);
+}
+
+/* ==================== PASSWORD TOGGLE ==================== */
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  font-size: 1rem;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: var(--primary);
+}
+
+/* ==================== CHECKBOX & FORM LINK ==================== */
+.checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-wrap input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.form-link {
+  font-size: 0.85rem;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.form-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* ==================== COUPON INPUT ==================== */
+.coupon-input-wrap {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.coupon-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-light);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.coupon-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.coupon-btn {
+  white-space: nowrap;
+}
+
+/* ==================== BREADCRUMB CHEVRONS ==================== */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 16px 0;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.breadcrumb a {
+  color: #666;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: var(--primary);
+}
+
+.breadcrumb a::after {
+  content: '\f054';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 0.55rem;
+  margin-left: 8px;
+  opacity: 0.5;
+  vertical-align: middle;
+}
+
+.breadcrumb a:last-of-type::after {
+  display: none;
+}
+
+.breadcrumb span {
+  color: var(--dark);
+  font-weight: 500;
+}
+
+/* ==================== NAVBAR ADJUSTMENT ==================== */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }

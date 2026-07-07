@@ -25,7 +25,18 @@
         </div>
         <div class="form-group">
           <label><i class="fas fa-lock"></i> Password</label>
-          <input type="password" name="password" placeholder="Enter your password" required>
+          <div class="password-input-wrap">
+            <input type="password" name="password" placeholder="Enter your password" required>
+            <button type="button" class="password-toggle" onclick="togglePassword(this)">
+              <i class="far fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div class="form-row" style="justify-content: space-between; align-items: center;">
+          <label class="checkbox-wrap">
+            <input type="checkbox" name="remember" value="1"> Remember me
+          </label>
+          <a href="/forgot-password" class="form-link">Forgot Password?</a>
         </div>
         <button type="submit" class="btn btn-primary btn-block btn-lg">
           <i class="fas fa-sign-in-alt"></i> Sign In
@@ -38,5 +49,19 @@
     </div>
   </div>
 </section>
+
+<script>
+function togglePassword(btn) {
+  const input = btn.parentElement.querySelector('input');
+  const icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.replace('fa-eye', 'fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.replace('fa-eye-slash', 'fa-eye');
+  }
+}
+</script>
 
 <%- include('partials/footer') %>

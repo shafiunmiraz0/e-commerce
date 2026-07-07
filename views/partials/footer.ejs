@@ -51,6 +51,30 @@
     document.addEventListener('click', () => {
       document.querySelectorAll('.dropdown.show').forEach(d => d.classList.remove('show'));
     });
+
+    // Announcement bar rotation
+    document.addEventListener('DOMContentLoaded', () => {
+      const items = document.querySelectorAll('.announcement-item');
+      if (items.length > 1) {
+        let current = 0;
+        setInterval(() => {
+          items[current].classList.remove('active');
+          current = (current + 1) % items.length;
+          items[current].classList.add('active');
+        }, 4000);
+      }
+    });
+
+    // Coupon apply (placeholder)
+    function applyCoupon(context) {
+      const input = document.getElementById(context + '-coupon');
+      if (!input || !input.value.trim()) {
+        showToast('Please enter a coupon code', 'error');
+        return;
+      }
+      showToast('Coupon "' + input.value.trim() + '" applied!', 'success');
+      input.value = '';
+    }
   </script>
 </body>
 </html>

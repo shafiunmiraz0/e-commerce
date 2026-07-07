@@ -130,6 +130,11 @@ router.get('/logout', (req, res) => {
   });
 });
 
+// Forgot password page (placeholder)
+router.get('/forgot-password', (req, res) => {
+  res.render('forgot-password', { title: 'Forgot Password' });
+});
+
 // Account dashboard
 router.get('/account', isAuthenticated, async (req, res) => {
   try {
