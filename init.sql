@@ -125,7 +125,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- Insert sample products
 INSERT INTO products (name, slug, description, price, original_price, image, category_id, stock, sold, rating, reviews_count, is_featured) VALUES
-('Wireless Bluetooth Earbuds Pro', 'wireless-bluetooth-earbuds-pro', 'Premium wireless earbuds with active noise cancellation, 30-hour battery life, and IPX5 waterproof rating. Crystal clear audio with deep bass.', 29.99, 59.99, 'https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=400', 1, 500, 1243, 4.5, 892, true),
+('Wireless Bluetooth Earbuds Pro', 'wireless-bluetooth-earbuds-pro', 'Premium wireless earbuds with active noise cancellation, 30-hour battery life, and IPX5 waterproof rating. Crystal clear audio with deep bass.', 29.99, 59.99, 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400', 1, 500, 1243, 4.5, 892, true),
 ('Smart Watch Ultra X1', 'smart-watch-ultra-x1', 'Advanced smartwatch with health monitoring, GPS tracking, 7-day battery life. Compatible with iOS and Android.', 45.99, 89.99, 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400', 1, 300, 876, 4.7, 654, true),
 ('Vintage Canvas Backpack', 'vintage-canvas-backpack', 'Durable canvas backpack with leather accents. Multiple compartments, laptop sleeve, and adjustable straps.', 24.99, 49.99, 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400', 2, 200, 567, 4.3, 423, true),
 ('Minimalist Desk Lamp LED', 'minimalist-desk-lamp-led', 'Modern LED desk lamp with adjustable brightness, color temperature control, and USB charging port.', 18.99, 35.99, 'https://images.unsplash.com/photo-1507473885765-e6ed057ab6fe?w=400', 3, 150, 345, 4.6, 298, true),

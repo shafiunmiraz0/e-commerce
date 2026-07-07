@@ -25,15 +25,8 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=ecommerce_user
-      - DB_PASSWORD=ecommerce_secret_2024
-      - DB_NAME=ecommerce_db
-      - SESSION_SECRET=super-secret-session-key-change-in-production
-      - PORT=3000
-      - NODE_ENV=production
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
